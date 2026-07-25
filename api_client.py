@@ -193,6 +193,9 @@ class APIClient:
                             if data == "[DONE]":
                                 break
                             chunk = json.loads(data)
+                        # Skip lines with empty choices (e.g. cost info)
+                        if not chunk.get("choices"):
+                            continue
                             choice = chunk["choices"][0]
                             delta = choice.get("delta", {})
                             finish_reason = choice.get("finish_reason")
