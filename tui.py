@@ -7,9 +7,6 @@ import asyncio
 from enum import Enum
 from typing import Any
 
-from harness import CodingHarness
-from satire.engine import SatireEngine
-
 
 class TUIMode(Enum):
     CHAT = "chat"
@@ -172,17 +169,33 @@ class TUI:
         print()
 
     def _get_llm_response(self, message: str) -> str:
-        """Get a response from the LLM via the harness"""
+        """Get a response from the LLM via the harness using a persistent event loop."""
         if not self.api_client:
             return "No API client configured. Use /settings to configure."
 
-        satire = SatireEngine(
-            bürokratie_mode=self.config.get("bürokratie", True)
-        )
-        harness = CodingHarness(self.api_client, satire)
+        from harness import CodingHarness
+        from satire.engine import SatireEngine
+
+        # Lazily create harness once and reuse it
+        if not hasattr(self, '_harness'):
+            satire = SatireEngine(
+                bürokratie_mode=self.config.get("bürokratie", True)
+            )
+            self._harness = CodingHarness(self.api_client, satire)
+
+        # Use a persistent event loop instead of asyncio.run()
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+
+        if loop.is_closed():
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
 
         try:
-            return asyncio.run(harness.generate_code(message))
+            return loop.run_until_complete(self._harness.generate_code(message))
         except Exception as e:
             return f"Error generating response: {e}"
 
