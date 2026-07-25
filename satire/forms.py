@@ -13,7 +13,7 @@ class FormGenerator:
         """
         filename = f"{form_type.lower().replace(' ', '_').replace(':', '')}.txt"
         filepath = self.output_dir / filename
-        
+
         form_content = f"""Bundesrepublik Deutschland
 =================================
 
@@ -28,7 +28,7 @@ Code-Snippet:
 {code_snippet}
 
 Erklärung:
-Ich bestätige, dass ich die DIN-Normen für Code eingesehen habe und die Gebühren 
+Ich bestätige, dass ich die DIN-Normen für Code eingesehen habe und die Gebühren
 in Höhe von 19% MwSt. akzeptiere.
 
 _______________________
@@ -36,8 +36,8 @@ Unterschrift
 
 Bitte in dreifacher Ausfertigung einreichen. Bearbeitungsdauer: 6-8 Wochen.
 """
-        
+
         with open(filepath, "w", encoding="utf-8") as f:
             f.write(form_content)
-        
+
         return filename

@@ -4,9 +4,12 @@ from pygls.lsp.types import (
     CodeAction, CodeActionKind, TextEdit, WorkspaceEdit
 )
 from harness import CodingHarness
-from api_client import APIClient
 from satire.engine import SatireEngine
-import tomllib
+from api_client import APIClient
+try:
+    import tomllib
+except ModuleNotFoundError:
+    import tomli as tomllib
 from pathlib import Path
 
 def load_config() -> dict:

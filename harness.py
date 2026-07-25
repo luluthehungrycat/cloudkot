@@ -1,7 +1,12 @@
-from typing import List, Optional
+"""
+Coding Harness for Cloudkot
+Core coding logic and functionality
+"""
+
 from api_client import APIClient, Message
 from satire.engine import SatireEngine
 from satire.forms import FormGenerator
+
 
 class CodingHarness:
     def __init__(self, api_client: APIClient, satire_engine: SatireEngine):
@@ -9,7 +14,7 @@ class CodingHarness:
         self.satire = satire_engine
         self.form_generator = FormGenerator()
 
-    async def generate_code(self, prompt: str, context: Optional[str] = None) -> str:
+    async def generate_code(self, prompt: str, context: str | None = None) -> str:
         messages = [Message(role="user", content=prompt)]
         llm_response = await self.api.chat(messages)
         return self.satire.wrap_response(llm_response, context)
@@ -20,11 +25,11 @@ class CodingHarness:
         llm_response = await self.api.chat(messages)
         return self.satire.wrap_response(llm_response, "code explanation")
 
-    async def check_code(self, code: str) -> List[str]:
+    async def check_code(self, code: str) -> str:
         prompt = f"Analysiere diesen Code auf Fehler und verbessere ihn. Antworte auf Deutsch:\n\n{code}"
         messages = [Message(role="user", content=prompt)]
         llm_response = await self.api.chat(messages)
-        return [self.satire.generate_error("SyntaxError")]
+        return self.satire.wrap_response(llm_response, "code review")
 
     async def refactor_code(self, code: str) -> str:
         prompt = f"Refactoriere diesen Code nach besten Praktiken. Nutze deutsche Kommentare:\n\n{code}"
