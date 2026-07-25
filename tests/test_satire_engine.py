@@ -25,17 +25,17 @@ class TestSatireEngine:
         """Test that Bürokratie mode wraps responses"""
         response = "def add(a, b): return a + b"
         wrapped = satire_engine.wrap_response(response, "function")
-        
+
         # Should contain bureaucratic elements
         assert any(header in wrapped for header in [
             "Gemäß §12 Abs. 3",
             "Nach Rücksprache mit Abteilung 4b",
             "Laut DIN 66234-8"
         ])
-        
+
         # Should contain the original response
         assert response in wrapped
-        
+
         # Should contain a footer
         assert any(footer in wrapped for footer in [
             "Mehrwertsteuer (19%)",
@@ -47,7 +47,7 @@ class TestSatireEngine:
         """Test that Bürokratie mode off returns raw response"""
         response = "def add(a, b): return a + b"
         wrapped = neutral_engine.wrap_response(response, "function")
-        
+
         # Should be exactly the same as input
         assert wrapped == response
 
@@ -55,7 +55,7 @@ class TestSatireEngine:
         """Test that form hints are added for function context"""
         response = "def add(a, b): return a + b"
         wrapped = satire_engine.wrap_response(response, "function")
-        
+
         # Should contain form hint for function
         assert "Formular F-42" in wrapped or "Funktionsgenehmigung" in wrapped
 
@@ -63,7 +63,7 @@ class TestSatireEngine:
         """Test that form hints are added for variable context"""
         response = "x = 42"
         wrapped = satire_engine.wrap_response(response, "variable")
-        
+
         # Should contain form hint for variable
         assert "Formular V-12" in wrapped or "Variable Deklarationsantrag" in wrapped
 
@@ -71,7 +71,7 @@ class TestSatireEngine:
         """Test that form hints are added for loop context"""
         response = "for i in range(10): print(i)"
         wrapped = satire_engine.wrap_response(response, "loop")
-        
+
         # Should contain form hint for loop
         assert "Formular L-89" in wrapped or "Schleifen-Zulassung" in wrapped
 
@@ -79,7 +79,7 @@ class TestSatireEngine:
         """Test that no form hint is added without context"""
         response = "def add(a, b): return a + b"
         wrapped = satire_engine.wrap_response(response, None)
-        
+
         # Should not contain form hints
         assert "Formular" not in wrapped
 
@@ -101,7 +101,7 @@ class TestSatireEngine:
         """Test that headers are randomly selected"""
         response = "test"
         headers = set()
-        
+
         # Generate multiple responses to test randomness
         # Use a larger number to account for random chance
         for _ in range(20):
@@ -109,7 +109,7 @@ class TestSatireEngine:
             # Extract the header (first line)
             header = wrapped.split('\n')[0]
             headers.add(header)
-        
+
         # Should have multiple different headers (at least 2 out of 3 possible)
         assert len(headers) >= 2
 
@@ -117,13 +117,13 @@ class TestSatireEngine:
         """Test that footers are randomly selected"""
         response = "test"
         footers = set()
-        
+
         # Generate multiple responses to test randomness
         for _ in range(10):
             wrapped = satire_engine.wrap_response(response)
             # Extract the footer (last line)
             footer = wrapped.split('\n')[-1]
             footers.add(footer)
-        
+
         # Should have multiple different footers
         assert len(footers) > 1

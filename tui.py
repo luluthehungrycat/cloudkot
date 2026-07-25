@@ -33,7 +33,7 @@ class TUI:
         self.history: List[Dict[str, str]] = []
         self.current_input = ""
         self.running = False
-        
+
         # Setup readline for history
         self._setup_readline()
 
@@ -52,7 +52,7 @@ class TUI:
         print("Cloudkot TUI - Der deutsche KI-Code-Assistent")
         print("Tip: Type '/help' for commands, '/exit' to quit")
         print()
-        
+
         while self.running:
             try:
                 self._run_loop()
@@ -75,17 +75,17 @@ class TUI:
         """Handle chat mode"""
         try:
             user_input = input("💬 > ").strip()
-            
+
             if not user_input:
                 return
-            
+
             if user_input.startswith("/"):
                 self._handle_command(user_input[1:])
                 return
-            
+
             # Process as chat message
             self._process_chat_message(user_input)
-            
+
         except EOFError:
             raise
 
@@ -107,7 +107,7 @@ class TUI:
         print("Settings mode - Configure Cloudkot")
         print("Available settings: provider, model, personality, bürokratie")
         print("Type '/back' to return")
-        
+
         while self.mode == TUIMode.SETTINGS:
             try:
                 cmd = input("⚙️ > ").strip()
@@ -123,7 +123,7 @@ class TUI:
         parts = command.split()
         cmd = parts[0].lower() if parts else ""
         args = parts[1:] if len(parts) > 1 else []
-        
+
         commands = {
             "help": self._cmd_help,
             "exit": self._cmd_exit,
@@ -136,7 +136,7 @@ class TUI:
             "providers": self._cmd_providers,
             "personalities": self._cmd_personalities,
         }
-        
+
         if cmd in commands:
             commands[cmd](*args)
         else:
@@ -148,16 +148,16 @@ class TUI:
         if len(parts) != 2:
             print("Usage: setting=value")
             return
-        
+
         key, value = parts[0].strip(), parts[1].strip()
-        
+
         settings = {
             "provider": self._set_provider,
             "model": self._set_model,
             "personality": self._set_personality,
             "bürokratie": self._set_bürokratie,
         }
-        
+
         if key in settings:
             settings[key](value)
         else:
@@ -167,13 +167,13 @@ class TUI:
         """Process a chat message"""
         # Add to history
         self.history.append({"role": "user", "content": message})
-        
+
         # Display user message
         print(f"👤 User: {message}")
-        
+
         # Simulate assistant response (in real implementation, call API)
         response = self._generate_response(message)
-        
+
         self.history.append({"role": "assistant", "content": response})
         print(f"🤖 Assistant: {response}")
         print()
@@ -216,7 +216,7 @@ class TUI:
         if not self.history:
             print("No history yet.")
             return
-        
+
         print("Chat History:")
         for i, msg in enumerate(self.history[-10:], 1):  # Show last 10 messages
             role = msg["role"]

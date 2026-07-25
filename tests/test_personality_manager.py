@@ -18,17 +18,17 @@ class TestPersonalityManager:
     def test_load_personalities(self, personality_manager):
         """Test that personalities are loaded from config"""
         personalities = personality_manager.list_personalities()
-        
+
         # Should have at least the personalities we defined
         expected_personalities = ["neutral", "stromberg", "friendly", "pedantic"]
-        
+
         for personality in expected_personalities:
             assert personality in personalities
 
     def test_get_personality(self, personality_manager):
         """Test getting a specific personality"""
         personality = personality_manager.get_personality("neutral")
-        
+
         assert personality.name == "Neutral"
         assert personality.description == "A professional, straightforward coding assistant"
         assert personality.temperature == 0.7
@@ -38,13 +38,13 @@ class TestPersonalityManager:
         """Test getting an unknown personality raises error"""
         with pytest.raises(ValueError) as exc_info:
             personality_manager.get_personality("unknown_personality")
-        
+
         assert "Unknown personality" in str(exc_info.value)
 
     def test_get_system_prompt(self, personality_manager):
         """Test getting system prompt for a personality"""
         prompt = personality_manager.get_system_prompt("stromberg")
-        
+
         assert len(prompt) > 0
         assert "coding assistant" in prompt.lower()
 
@@ -72,24 +72,24 @@ class TestPersonalityManager:
             temperature=0.5,
             top_p=0.8
         )
-        
+
         assert custom.name == "test_personality"
         assert custom.description == "A test personality"
         assert custom.temperature == 0.5
         assert custom.top_p == 0.8
-        
+
         # Check that it was added to the list
         assert "test_personality" in personality_manager.list_personalities()
 
     def test_stromberg_personality(self, personality_manager):
         """Test that Stromberg personality has expected traits"""
         stromberg = personality_manager.get_personality("stromberg")
-        
+
         # Should have specific traits in the system prompt
         prompt = stromberg.system_prompt
         assert "efficient" in prompt.lower()
         assert "corporate" in prompt.lower()
         assert "direct" in prompt.lower()
-        
+
         # Should have higher temperature for more varied responses
         assert stromberg.temperature >= 0.7
