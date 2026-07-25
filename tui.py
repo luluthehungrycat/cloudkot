@@ -3,8 +3,12 @@ Text User Interface for Cloudkot
 Provides a rich terminal interface for the coding assistant
 """
 
+import asyncio
 from enum import Enum
 from typing import Any
+
+from harness import CodingHarness
+from satire.engine import SatireEngine
 
 
 class TUIMode(Enum):
@@ -153,29 +157,34 @@ class TUI:
             print(f"Unknown setting: {key}")
 
     def _process_chat_message(self, message: str):
-        """Process a chat message"""
+        """Process a chat message using the actual LLM"""
         # Add to history
         self.history.append({"role": "user", "content": message})
 
         # Display user message
         print(f"👤 User: {message}")
 
-        # Simulate assistant response (in real implementation, call API)
-        response = self._generate_response(message)
+        # Get response from the actual LLM via harness
+        response = self._get_llm_response(message)
 
         self.history.append({"role": "assistant", "content": response})
         print(f"🤖 Assistant: {response}")
         print()
 
-    def _generate_response(self, message: str) -> str:
-        """Generate a response to a message"""
-        # This is a placeholder - in real implementation, call the API
-        if "hallo" in message.lower() or "hello" in message.lower():
-            return "Hallo! Wie kann ich Ihnen bei der Code-Entwicklung helfen?"
-        elif "code" in message.lower() or "funktion" in message.lower():
-            return "Ich kann Ihnen helfen, Code zu generieren. Was möchten Sie erstellen?"
-        else:
-            return f"Ich verstehe: {message}. Wie kann ich helfen?"
+    def _get_llm_response(self, message: str) -> str:
+        """Get a response from the LLM via the harness"""
+        if not self.api_client:
+            return "No API client configured. Use /settings to configure."
+
+        satire = SatireEngine(
+            bürokratie_mode=self.config.get("bürokratie", True)
+        )
+        harness = CodingHarness(self.api_client, satire)
+
+        try:
+            return asyncio.run(harness.generate_code(message))
+        except Exception as e:
+            return f"Error generating response: {e}"
 
     def _cmd_help(self, *args):
         """Show help"""
