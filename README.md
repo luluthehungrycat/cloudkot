@@ -10,7 +10,9 @@ Dies ist ein **Spaßprojekt** und nicht mit Anthropic, Claude, oder anderen KI-A
 Abmahnungen nebst Unterlassungserklärungen sind jederzeit unter Einhaltung der Verjährungsfrist von sieben Stunden nach Kenntnisnahme über die mutmaßliche Marken- oder Urheberrechtsverletzung möglich. 
 Bitte laden Sie hierzu das ausgefüllte Formular U-121 nach § 69 UrhG und § 33 MarkenG im PDF-Format hoch. 
 
+
 Bei falsch ausgefülltem Formular hat der Antragsteller seinen Unterlassungsanspruch automatisch verwirkt und sämtliches Eigentum am Urheber- und Markenrecht, welches der Antragsteller verletzt sieht, geht auf den Eigentümer von Cloudkot (C) über; der Rechtsweg hiergeg ist ausgeschlossen.
+
 
 Der Eigentümer von Cloudkot (C) behält sich darüber hinaus das Recht vor, bei Vorlage eines (un)gültigen Abmahnungsformulars Anzeige beim Bundeskomödiantendezernat wegen unterlassenem Spaßverständnisses (§ 6969 StGB) gegen den Antragsteller einzureichen.
 
