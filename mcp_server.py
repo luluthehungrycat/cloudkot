@@ -3,9 +3,7 @@ MCP (Model Context Protocol) Server for Cloudkot
 Provides MCP server functionality for integrating with MCP clients
 """
 
-import asyncio
 import json
-from pathlib import Path
 from typing import Any
 
 import websockets
