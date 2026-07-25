@@ -14,7 +14,7 @@ Bitte laden Sie hierzu das ausgefüllte Formular U-121 nach § 69 UrhG und § 33
 Bei falsch ausgefülltem Formular hat der Antragsteller seinen Unterlassungsanspruch automatisch verwirkt und sämtliches Eigentum am Urheber- und Markenrecht, welches der Antragsteller verletzt sieht, geht auf den Eigentümer von Cloudkot (C) über; der Rechtsweg hiergeg ist ausgeschlossen.
 
 
-Der Eigentümer von Cloudkot (C) behält sich darüber hinaus das Recht vor, bei Vorlage eines (un)gültigen Abmahnungsformulars Strafantrag gegen den Antragsteller wegen unterlassenem Spaßverständnisses (§ 6969 StGB) beim Bundeskomödiantendezernat Köln einzureichen.
+Der Eigentümer von Cloudkot (C) behält sich darüber hinaus das Recht vor, bei Vorlage eines (un)gültigen Abmahnungsformulars Strafantrag gegen den Antragsteller wegen unterlassenem Spaßverständnisses (§ 6969 StGB) beim Bundeskomödiantendezernat Köln oder der Redaktion der heute-show einzureichen.
 
 ---
 
