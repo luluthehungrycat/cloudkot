@@ -7,6 +7,8 @@ Cloudkot ist ein **satirisches** Coding-Tool, das jeden Code-Vorgang in ein **b�
 ⚠️ **WICHTIGER HINWEIS:**
 Dies ist ein **Spaßprojekt** und nicht mit Anthropic, Claude, oder anderen KI-Anbietern verbunden. Alle Markenrechte gehören ihren jeweiligen Eigentümern.
 
+Abmahnungen nebst Unterlassungserklärungen sind jederzeit unter Einhaltung der Verjährungsfrist von sieben Stunden nach Kenntnisnahme über die mutmaßliche Marken- oder Urheberrechtsverletzung möglich. Bitte laden Sie hierzu das ausgefüllte Formular nach § 69 UrhG und § 33 MarkenG im PDF-Format hoch. Bei falsch ausgefülltem Formular hat der Antragsteller seinen Unterlassungsanspruch verwirkt und das Eigentum am Urheber- und Markenrecht, welches der Antragsteller verletzt sieht, geht auf den Eigentümer con Cloudkot über; der Rechtsweg ist ausgeschlossen.
+
 ---
 
 ## ✨ Features
