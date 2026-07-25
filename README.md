@@ -72,6 +72,7 @@ cloudkot/
 ├── forms/               # Generierte Formulare
 ├── pyproject.toml       # Abhängigkeiten
 ├── requirements.txt     # Pip-Abhängigkeiten
+├── LICENSE              # Modifizierte MIT-Lizenz
 └── README.md
 ```
 
@@ -104,7 +105,7 @@ Hinweis: Dieser Code unterliegt der Mehrwertsteuer (19%).
 
 ---
 
-## 🔧 Entwicklung
+## 📚 Entwicklung
 
 ### Vorraussetzungen
 - Python 3.10+
@@ -121,7 +122,6 @@ pip install -r requirements.txt
 
 ### Tests
 ```bash
-# TODO: Tests hinzufügen
 pytest
 ```
 
@@ -129,4 +129,46 @@ pytest
 
 ## 📜 Lizenz
 
-MIT License – aber bitte füllen Sie zuerst Formular L-101 aus, bevor Sie den Code verwenden.
+**Cloudkot Lizenzvertrag (Modifizierte MIT-Lizenz)**
+
+Diese Software unterliegt einer modifizierten MIT-Lizenz mit folgenden zusätzlichen Bedingungen:
+
+> **§ 3 - Lizenzverlust bei Falschangaben**
+> **FALSCH AUSGEFÜLLTE DIN 400-ANTRÄGE FÜHREN AUTOMATISCH ZUM LIZENZVERLUST DES ANTRASTELLERS AUF LEBENSZEIT.**
+
+Die vollständige Lizenz finden Sie in der Datei [LICENSE](LICENSE).
+
+---
+
+## 🎭 Persönlichkeiten
+
+Cloudkot unterstützt verschiedene Persönlichkeitseinstellungen:
+- **neutral** - Professionell und direkt
+- **stromberg** - Effizient mit corporate-style (inspiriert von Führungseigenschaften)
+- **friendly** - Warm und ermutigend
+- **pedantic** - Präzise und detailorientiert
+
+Verwendung:
+```bash
+python main.py generate -p "..." --personality stromberg
+```
+
+---
+
+## 🏢 Provider
+
+Unterstützte LLM-Provider:
+- OpenAI (API Key & OAuth)
+- Anthropic
+- Mistral AI
+- OpenRouter
+- OpenCode Go & Zen
+
+Verwendung:
+```bash
+python main.py generate -p "..." --provider openai --model gpt-4o
+```
+
+---
+
+*"Diese Dokumentation unterliegt der Mehrwertsteuer (19%). Bitte bewahren Sie diese Ausgabe für Ihre Unterlagen auf."*
