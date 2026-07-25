@@ -193,47 +193,47 @@ class APIClient:
                             if data == "[DONE]":
                                 break
                             chunk = json.loads(data)
-                        # Skip lines with empty choices (e.g. cost info)
-                        if not chunk.get("choices"):
-                            continue
-                        choice = chunk["choices"][0]
-                        delta = choice.get("delta", {})
-                        finish_reason = choice.get("finish_reason")
+                            # Skip lines with empty choices (e.g. cost info)
+                            if not chunk.get("choices"):
+                                continue
+                            choice = chunk["choices"][0]
+                            delta = choice.get("delta", {})
+                            finish_reason = choice.get("finish_reason")
 
-                        # Text content
-                        text = delta.get("content")
-                        if text and callbacks and callbacks.on_text:
-                            callbacks.on_text(text)
-                            content_chunks.append(text)
+                            # Text content
+                            text = delta.get("content")
+                            if text and callbacks and callbacks.on_text:
+                                callbacks.on_text(text)
+                                content_chunks.append(text)
 
-                        # Reasoning content
-                        reasoning = delta.get("reasoning_content")
-                        if reasoning and callbacks and callbacks.on_reasoning:
-                            callbacks.on_reasoning(reasoning)
+                            # Reasoning content
+                            reasoning = delta.get("reasoning_content")
+                            if reasoning and callbacks and callbacks.on_reasoning:
+                                callbacks.on_reasoning(reasoning)
 
-                        # Tool calls
-                        tool_calls_delta = delta.get("tool_calls")
-                        if tool_calls_delta:
-                            for tc in tool_calls_delta:
-                                idx = tc["index"]
-                                if idx not in tool_calls_acc:
-                                    tool_calls_acc[idx] = {
-                                        "id": tc.get("id", ""),
-                                        "type": tc.get("type", "function"),
-                                        "function": {
-                                            "name": tc.get("function", {}).get("name", ""),
-                                            "arguments": tc.get("function", {}).get("arguments", ""),
+                            # Tool calls
+                            tool_calls_delta = delta.get("tool_calls")
+                            if tool_calls_delta:
+                                for tc in tool_calls_delta:
+                                    idx = tc["index"]
+                                    if idx not in tool_calls_acc:
+                                        tool_calls_acc[idx] = {
+                                            "id": tc.get("id", ""),
+                                            "type": tc.get("type", "function"),
+                                            "function": {
+                                                "name": tc.get("function", {}).get("name", ""),
+                                                "arguments": tc.get("function", {}).get("arguments", ""),
+                                            }
                                         }
-                                    }
-                                else:
-                                    # Accumulate function arguments across chunks
-                                    if "function" in tc:
-                                        if tc["function"].get("name"):
-                                            tool_calls_acc[idx]["function"]["name"] = tc["function"]["name"]
-                                        if tc["function"].get("arguments"):
-                                            tool_calls_acc[idx]["function"]["arguments"] += tc["function"]["arguments"]
-                                        if tc.get("id"):
-                                            tool_calls_acc[idx]["id"] = tc["id"]
+                                    else:
+                                        # Accumulate function arguments across chunks
+                                        if "function" in tc:
+                                            if tc["function"].get("name"):
+                                                tool_calls_acc[idx]["function"]["name"] = tc["function"]["name"]
+                                            if tc["function"].get("arguments"):
+                                                tool_calls_acc[idx]["function"]["arguments"] += tc["function"]["arguments"]
+                                            if tc.get("id"):
+                                                tool_calls_acc[idx]["id"] = tc["id"]
 
                     # Build ChatResult from accumulated data
                     full_content = "".join(content_chunks)
