@@ -3,7 +3,8 @@ Unit tests for PermissionManager
 """
 
 import pytest
-from permissions import PermissionManager, PermissionLevel
+
+from permissions import PermissionLevel, PermissionManager
 
 
 @pytest.fixture
@@ -72,8 +73,8 @@ class TestPermissionManager:
     def test_load_from_config(self):
         """Test loading permissions from config file"""
         # Create a temporary config file
-        import tempfile
         import os
+        import tempfile
 
         config_content = """
 [permissions]

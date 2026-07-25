@@ -1,5 +1,6 @@
-from pathlib import Path
 import random
+from pathlib import Path
+
 
 class FormGenerator:
     def __init__(self, output_dir: str = "./forms"):

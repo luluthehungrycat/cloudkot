@@ -3,7 +3,8 @@ Unit tests for ContextManager
 """
 
 import pytest
-from context_manager import ContextManager, ContextItem
+
+from context_manager import ContextItem, ContextManager
 
 
 @pytest.fixture
@@ -128,8 +129,8 @@ class TestContextManager:
 
     def test_load_config(self):
         """Test loading configuration from file"""
-        import tempfile
         import os
+        import tempfile
 
         config_content = """
 [context]

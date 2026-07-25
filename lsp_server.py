@@ -1,16 +1,25 @@
-from pygls.server import LanguageServer
 from pygls.lsp.types import (
-    Diagnostic, DiagnosticSeverity, Range, Position,
-    CodeAction, CodeActionKind, TextEdit, WorkspaceEdit
+    CodeAction,
+    CodeActionKind,
+    Diagnostic,
+    DiagnosticSeverity,
+    Position,
+    Range,
+    TextEdit,
+    WorkspaceEdit,
 )
+from pygls.server import LanguageServer
+
+from api_client import APIClient
 from harness import CodingHarness
 from satire.engine import SatireEngine
-from api_client import APIClient
+
 try:
     import tomllib
 except ModuleNotFoundError:
     import tomli as tomllib
 from pathlib import Path
+
 
 def load_config() -> dict:
     config_path = Path("config.toml")

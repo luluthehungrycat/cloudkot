@@ -3,6 +3,7 @@ Unit tests for SatireEngine
 """
 
 import pytest
+
 from satire.engine import SatireEngine
 
 

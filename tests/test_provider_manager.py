@@ -3,6 +3,7 @@ Unit tests for ProviderManager
 """
 
 import pytest
+
 from provider_manager import ProviderManager
 
 
