@@ -5,18 +5,10 @@ Provides a rich terminal interface for the coding assistant
 
 import asyncio
 import sys
-from typing import Optional, List, Dict, Any
 from enum import Enum
+from typing import Any
+
 import readline
-from prompt_toolkit import Application
-from prompt_toolkit.buffer import Buffer
-from prompt_toolkit.layout.containers import Window, HSplit, VSplit
-from prompt_toolkit.layout.controls import BufferControl, FormattedTextControl
-from prompt_toolkit.layout.dimension import Dimension
-from prompt_toolkit.layout.layout import Layout
-from prompt_toolkit.widgets import Button, TextArea
-from prompt_toolkit.key_binding import KeyBindings
-from prompt_toolkit.styles import Style
 
 
 class TUIMode(Enum):
@@ -26,11 +18,11 @@ class TUIMode(Enum):
 
 
 class TUI:
-    def __init__(self, api_client: Any = None, config: Dict[str, Any] = None):
+    def __init__(self, api_client: Any = None, config: dict[str, Any] = None):
         self.api_client = api_client
         self.config = config or {}
         self.mode = TUIMode.CHAT
-        self.history: List[Dict[str, str]] = []
+        self.history: list[dict[str, str]] = []
         self.current_input = ""
         self.running = False
 
@@ -40,9 +32,10 @@ class TUI:
     def _setup_readline(self):
         """Setup readline for command history"""
         try:
-            import readline
-            readline.parse_and_bind("tab: complete")
-            readline.set_history_length(100)
+            import readline as rl
+
+            rl.parse_and_bind("tab: complete")
+            rl.set_history_length(100)
         except ImportError:
             pass
 
@@ -239,6 +232,7 @@ class TUI:
         """List available providers"""
         try:
             from provider_manager import provider_manager
+
             providers = provider_manager.list_providers()
             print("Available providers:")
             for provider in providers:
@@ -250,6 +244,7 @@ class TUI:
         """List available personalities"""
         try:
             from personality_manager import personality_manager
+
             personalities = personality_manager.list_personalities()
             print("Available personalities:")
             for personality in personalities:
@@ -279,6 +274,7 @@ class TUI:
 
 
 # Singleton instance
-def create_tui(api_client: Any = None, config: Dict[str, Any] = None) -> TUI:
+
+def create_tui(api_client: Any = None, config: dict[str, Any] = None) -> TUI:
     """Create and return a TUI instance"""
     return TUI(api_client, config)
