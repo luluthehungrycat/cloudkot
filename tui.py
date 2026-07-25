@@ -154,26 +154,23 @@ class TUI:
             print(f"Unknown setting: {key}")
 
     def _process_chat_message(self, message: str):
-        """Process a chat message using the actual LLM"""
-        # Add to history
+        """Process a chat message using the actual LLM with streaming display."""
         self.history.append({"role": "user", "content": message})
-
-        # Display user message
         print(f"👤 User: {message}")
+        print("🤖 Assistant: ", end="", flush=True)
 
-        # Get response from the actual LLM via harness
         response = self._get_llm_response(message)
 
         self.history.append({"role": "assistant", "content": response})
-        print(f"🤖 Assistant: {response}")
+        print()
         print()
 
     def _get_llm_response(self, message: str) -> str:
-        """Get a response from the LLM via the harness, preserving conversation history."""
+        """Get a response from the LLM with real-time streaming display."""
         if not self.api_client:
             return "No API client configured. Use /settings to configure."
 
-        from api_client import Message
+        from api_client import Message, StreamCallbacks
         from harness import CodingHarness
         from satire.engine import SatireEngine
 
@@ -189,6 +186,17 @@ class TUI:
                 for entry in self.history]
         msgs.append(Message(role="user", content=message))
 
+        # Create streaming callbacks for real-time display
+        callbacks = StreamCallbacks(
+            on_text=lambda text: print(text, end="", flush=True),
+            on_reasoning=lambda text: print(f"\033[90m{text}\033[0m", end="", flush=True),
+            on_tool_call=lambda name, args: print(f"\n  \033[36m🔧 {name}({args})\033[0m", flush=True),
+            on_tool_result=lambda name, result: print(
+                f"  \033[32m✅ {name} → {result[:200]}{'...' if len(result) > 200 else ''}\033[0m",
+                flush=True
+            ),
+        )
+
         # Use a persistent event loop instead of asyncio.run()
         try:
             loop = asyncio.get_event_loop()
@@ -201,7 +209,9 @@ class TUI:
             asyncio.set_event_loop(loop)
 
         try:
-            return loop.run_until_complete(self._harness.continue_chat(msgs))
+            return loop.run_until_complete(
+                self._harness.continue_chat_stream(msgs, callbacks=callbacks)
+            )
         except Exception as e:
             return f"Error generating response: {e}"
 

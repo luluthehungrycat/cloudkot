@@ -19,11 +19,13 @@ class CodingHarness:
         self.satire = satire_engine
         self.form_generator = FormGenerator()
 
-    async def _run_agent_loop(self, messages: list[Message], context: str | None = None) -> str:
+    async def _run_agent_loop(self, messages: list[Message], context: str | None = None, callbacks=None) -> str:
         """Run the tool-calling agent loop.
 
         Sends messages with tool definitions, handles tool calls by executing
         tools and feeding results back, until the model returns a final response.
+
+        When callbacks are provided, streaming is enabled for real-time display.
         """
         tool_defs = get_tool_definitions()
         available_tools = list_tools()
@@ -42,7 +44,10 @@ class CodingHarness:
             messages = [system_msg] + messages
 
         for iteration in range(MAX_TOOL_ITERATIONS):
-            result = await self.api.chat(messages, use_context=False, tools=tool_defs)
+            if callbacks:
+                result = await self.api.chat(messages, use_context=False, tools=tool_defs, stream=True, callbacks=callbacks)
+            else:
+                result = await self.api.chat(messages, use_context=False, tools=tool_defs)
 
             if result.tool_calls:
                 # Create ONE assistant message with ALL tool calls grouped together
@@ -63,7 +68,14 @@ class CodingHarness:
 
                 # Execute each tool and add individual tool result messages
                 for tc in result.tool_calls:
+                    if callbacks and callbacks.on_tool_call:
+                        callbacks.on_tool_call(tc.name, tc.arguments)
+
                     tool_output = await execute_tool(tc.name, tc.arguments)
+
+                    if callbacks and callbacks.on_tool_result:
+                        callbacks.on_tool_result(tc.name, tool_output)
+
                     messages.append(Message(
                         role="tool",
                         content=tool_output,
@@ -87,6 +99,11 @@ class CodingHarness:
         messages = [Message(role="user", content=prompt)]
         return await self._run_agent_loop(messages, context)
 
+    async def generate_code_stream(self, prompt: str, context: str | None = None, callbacks=None) -> str:
+        """Generate code with streaming callbacks for real-time display."""
+        messages = [Message(role="user", content=prompt)]
+        return await self._run_agent_loop(messages, context, callbacks=callbacks)
+
     async def continue_chat(self, messages: list[Message], context: str | None = None) -> str:
         """Continue a conversation with existing message history.
 
@@ -95,6 +112,10 @@ class CodingHarness:
         appended to the list before calling this.
         """
         return await self._run_agent_loop(messages, context)
+
+    async def continue_chat_stream(self, messages: list[Message], context: str | None = None, callbacks=None) -> str:
+        """Continue a conversation with streaming callbacks for real-time display."""
+        return await self._run_agent_loop(messages, context, callbacks=callbacks)
 
     async def explain_code(self, code: str) -> str:
         prompt = f"Erkläre diesen Code auf Deutsch. Sei präzise und technisch:\n\n{code}"
