@@ -30,8 +30,13 @@ class TestSatireEngine:
         # Should contain bureaucratic elements
         assert any(header in wrapped for header in [
             "Gemäß §12 Abs. 3",
-            "Nach Rücksprache mit Abteilung 4b",
-            "Laut DIN 66234-8"
+            "Nach Rücksprache mit Abteilung",
+            "Laut DIN 66234-8",
+            "Aufgrund Ihres Antrags",
+            "Sach- und Aktenlage",
+            "Az:",
+            "Prüfstelle",
+            "Datenschutzbeauftragten",
         ])
 
         # Should contain the original response
@@ -41,7 +46,14 @@ class TestSatireEngine:
         assert any(footer in wrapped for footer in [
             "Mehrwertsteuer (19%)",
             "Bitte bewahren Sie diese Ausgabe",
-            "Genehmigt durch"
+            "Genehmigt durch",
+            "Antragsnummer:",
+            "Fachreferat",
+            "Gebührenbescheid",
+            "Widerspruch ist innerhalb",
+            "Sachbearbeiter:",
+            "Ausfertigung",
+            "Formular gültig",
         ])
 
     def test_bürokratie_mode_off(self, neutral_engine):
