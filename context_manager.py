@@ -3,16 +3,17 @@ Context Manager for Cloudkot
 Handles context window tracking and compression
 """
 
-import tomllib
-from pathlib import Path
-from typing import List, Dict, Any, Optional
-from pydantic import BaseModel
-from collections import deque
 import hashlib
+import tomllib
+from collections import deque
+from pathlib import Path
+
+from pydantic import BaseModel
 
 
 class ContextItem(BaseModel):
     """Represents an item in the context window"""
+
     content: str
     role: str  # user, assistant, system
     token_count: int
@@ -27,19 +28,19 @@ class ContextManager:
         self.compression_enabled: bool = True
         self.compression_threshold: float = 0.8
         self.current_tokens: int = 0
-        self.context_window: deque = deque()
-        self.token_counts: Dict[str, int] = {}  # Cache for token counts
+        self.context_window: deque[ContextItem] = deque()
+        self.token_counts: dict[str, int] = {}  # Cache for token counts
         self._load_config()
 
     def _load_config(self):
         """Load configuration from config file"""
         if not self.config_path.exists():
             return
-            
+
         try:
             with open(self.config_path, "rb") as f:
                 config = tomllib.load(f)
-                
+
             if "context" in config:
                 self.max_tokens = config["context"].get("max_tokens", 32768)
                 self.compression_enabled = config["context"].get("compression_enabled", True)
@@ -60,16 +61,16 @@ class ContextManager:
             content=content,
             role=role,
             token_count=token_count,
-            importance=importance
+            importance=importance,
         )
-        
+
         # Check if we need to compress before adding
         if self.compression_enabled and self._should_compress(token_count):
             self._compress_context()
-        
+
         self.context_window.append(item)
         self.current_tokens += token_count
-        
+
         return item
 
     def _should_compress(self, additional_tokens: int = 0) -> bool:
@@ -81,42 +82,44 @@ class ContextManager:
         """Compress the context window by removing less important items"""
         if not self.context_window:
             return
-        
+
         # Sort by importance (keep most important)
         sorted_context = sorted(self.context_window, key=lambda x: x.importance, reverse=True)
-        
+
         # Keep top 50% most important items
         keep_count = max(1, len(sorted_context) // 2)
-        
+
         # Rebuild context window with most important items
         new_window = deque()
         new_token_count = 0
-        
+
         for item in sorted_context[:keep_count]:
             new_window.append(item)
             new_token_count += item.token_count
-        
+
         self.context_window = new_window
         self.current_tokens = new_token_count
 
-    def get_context(self, max_tokens: Optional[int] = None) -> List[Dict[str, Any]]:
+    def get_context(self, max_tokens: int | None = None) -> list[dict[str, str]]:
         """Get the current context as a list of messages"""
         if max_tokens is None:
             max_tokens = self.max_tokens
-        
+
         result = []
         current_count = 0
-        
+
         # Return context in chronological order
         for item in self.context_window:
             if current_count + item.token_count > max_tokens:
                 break
-            result.append({
-                "role": item.role,
-                "content": item.content
-            })
+            result.append(
+                {
+                    "role": item.role,
+                    "content": item.content,
+                }
+            )
             current_count += item.token_count
-        
+
         return result
 
     def get_token_count(self) -> int:
@@ -136,7 +139,7 @@ class ContextManager:
         """Create a summary of the current context"""
         if not self.context_window:
             return ""
-        
+
         # Simple summary: concatenate user messages
         user_messages = [item.content for item in self.context_window if item.role == "user"]
         return " \n".join(user_messages[-3:])  # Last 3 user messages

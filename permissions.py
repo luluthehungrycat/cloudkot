@@ -3,11 +3,11 @@ Permission System for Cloudkot
 Handles tool call permissions and access control
 """
 
-import tomllib
-from pathlib import Path
-from typing import Dict, Set, Optional
-from enum import Enum
 import asyncio
+import tomllib
+from enum import Enum
+from pathlib import Path
+from typing import Any
 
 
 class PermissionLevel(Enum):
@@ -19,7 +19,7 @@ class PermissionLevel(Enum):
 class PermissionManager:
     def __init__(self, config_path: str = "config.toml"):
         self.config_path = Path(config_path)
-        self.permissions: Dict[str, PermissionLevel] = {}
+        self.permissions: dict[str, PermissionLevel] = {}
         self._load_permissions()
 
     def _load_permissions(self):
@@ -31,14 +31,14 @@ class PermissionManager:
             "network_access": PermissionLevel.DENY,
             "execute_code": PermissionLevel.ASK,
         }
-        
+
         if not self.config_path.exists():
             return
-            
+
         try:
             with open(self.config_path, "rb") as f:
                 config = tomllib.load(f)
-                
+
             if "permissions" in config:
                 for permission_name, permission_value in config["permissions"].items():
                     try:
@@ -52,7 +52,7 @@ class PermissionManager:
     def check_permission(self, permission_name: str) -> bool:
         """Check if a permission is granted"""
         permission = self.permissions.get(permission_name, PermissionLevel.DENY)
-        
+
         if permission == PermissionLevel.ALLOW:
             return True
         elif permission == PermissionLevel.DENY:
@@ -80,7 +80,7 @@ class PermissionManager:
         In non-interactive mode, returns False
         """
         permission = self.get_permission(permission_name)
-        
+
         if permission == PermissionLevel.ALLOW:
             return True
         elif permission == PermissionLevel.DENY:

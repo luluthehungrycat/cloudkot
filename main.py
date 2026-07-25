@@ -4,18 +4,20 @@ Der deutsche KI-Code-Assistent mit Bürokratie-Modus
 """
 
 import asyncio
-import click
-from typing import Optional
-from pathlib import Path
+import os
 import tomllib
+from pathlib import Path
+from typing import Any
+
+import click
 
 from api_client import APIClient
-from satire.engine import SatireEngine
-from harness import CodingHarness
-from provider_manager import provider_manager
-from personality_manager import personality_manager
-from permissions import permission_manager
 from context_manager import context_manager
+from harness import CodingHarness
+from permissions import permission_manager
+from personality_manager import personality_manager
+from provider_manager import provider_manager
+from satire.engine import SatireEngine
 from skills.skill_manager import skill_manager
 
 
@@ -25,7 +27,7 @@ def cli():
     pass
 
 
-def load_config() -> dict:
+def load_config() -> dict[str, Any]:
     """Load configuration from config.toml"""
     config_path = Path("config.toml")
     if not config_path.exists():
@@ -36,13 +38,13 @@ def load_config() -> dict:
         return tomllib.load(f)
 
 
-def create_api_client(config: dict) -> APIClient:
+def create_api_client(config: dict[str, Any]) -> APIClient:
     """Create an API client from configuration"""
     api_config = config.get("api", {})
-    
+
     # Check if provider is specified
     provider = api_config.get("provider", "local")
-    
+
     if provider != "local":
         try:
             provider_config = provider_manager.get_provider(provider)
@@ -50,16 +52,16 @@ def create_api_client(config: dict) -> APIClient:
             return APIClient(
                 provider=provider,
                 api_key=api_key,
-                model=api_config.get("model", provider_config.models[0] if provider_config.models else "gpt-3.5-turbo")
+                model=api_config.get("model", provider_config.models[0] if provider_config.models else "gpt-3.5-turbo"),
             )
         except Exception as e:
             print(f"Warning: Could not load provider {provider}: {e}")
-    
+
     # Fallback to local configuration
     return APIClient(
         base_url=api_config.get("base_url", "http://localhost:8080"),
         api_key=api_config.get("api_key", ""),
-        model=api_config.get("model", "mistral-tiny")
+        model=api_config.get("model", "mistral-tiny"),
     )
 
 
@@ -74,8 +76,8 @@ def provider_list():
     """List all available providers."""
     providers = provider_manager.list_providers()
     click.echo("Available providers:")
-    for provider in providers:
-        click.echo(f"  - {provider}")
+    for provider_name in providers:
+        click.echo(f"  - {provider_name}")
 
 
 @provider.command(name="models")
@@ -102,8 +104,8 @@ def personality_list():
     """List all available personalities."""
     personalities = personality_manager.list_personalities()
     click.echo("Available personalities:")
-    for personality in personalities:
-        click.echo(f"  - {personality}")
+    for personality_name in personalities:
+        click.echo(f"  - {personality_name}")
 
 
 @personality.command(name="show")
@@ -132,9 +134,9 @@ def skill_list():
     """List all available skills."""
     skills = skill_manager.list_skills()
     click.echo("Available skills:")
-    for skill in skills:
-        skill_obj = skill_manager.get_skill(skill)
-        click.echo(f"  - {skill}: {skill_obj.description}")
+    for skill_name in skills:
+        skill_obj = skill_manager.get_skill(skill_name)
+        click.echo(f"  - {skill_name}: {skill_obj.description}")
 
 
 @skill.command(name="enable")
@@ -165,7 +167,7 @@ def context_stats():
     stats = {
         "current_tokens": context_manager.get_token_count(),
         "max_tokens": context_manager.max_tokens,
-        "utilization": f"{context_manager.get_utilization() * 100:.1f}%"
+        "utilization": f"{context_manager.get_utilization() * 100:.1f}%",
     }
     click.echo("Context Statistics:")
     for key, value in stats.items():
@@ -186,11 +188,17 @@ def context_clear():
 @click.option("--provider", "-P", default=None, help="LLM provider to use")
 @click.option("--model", "-m", default=None, help="Model to use")
 @click.option("--personality", "-L", default=None, help="Personality to use")
-def generate(prompt: str, context: Optional[str], no_bürokratie: bool, 
-             provider: Optional[str], model: Optional[str], personality: Optional[str]):
+def generate(
+    prompt: str,
+    context: str | None,
+    no_bürokratie: bool,
+    provider: str | None,
+    model: str | None,
+    personality: str | None,
+):
     """Generate code with optional Bürokratie Mode."""
     config = load_config()
-    
+
     # Override with command line options
     if provider:
         config["api"]["provider"] = provider
@@ -198,13 +206,13 @@ def generate(prompt: str, context: Optional[str], no_bürokratie: bool,
         config["api"]["model"] = model
     if personality:
         config["personality"]["active"] = personality
-    
+
     api = create_api_client(config)
-    
+
     # Set personality if specified
     if personality:
         api.set_personality(personality)
-    
+
     satire = SatireEngine(bürokratie_mode=not no_bürokratie)
     harness = CodingHarness(api, satire)
 
@@ -217,22 +225,22 @@ def generate(prompt: str, context: Optional[str], no_bürokratie: bool,
 @click.option("--provider", "-P", default=None, help="LLM provider to use")
 @click.option("--model", "-m", default=None, help="Model to use")
 @click.option("--personality", "-L", default=None, help="Personality to use")
-def explain(code: str, provider: Optional[str], model: Optional[str], personality: Optional[str]):
+def explain(code: str, provider: str | None, model: str | None, personality: str | None):
     """Explain code with Bürokratie Mode."""
     config = load_config()
-    
+
     if provider:
         config["api"]["provider"] = provider
     if model:
         config["api"]["model"] = model
     if personality:
         config["personality"]["active"] = personality
-    
+
     api = create_api_client(config)
-    
+
     if personality:
         api.set_personality(personality)
-    
+
     satire = SatireEngine()
     harness = CodingHarness(api, satire)
 
@@ -245,22 +253,22 @@ def explain(code: str, provider: Optional[str], model: Optional[str], personalit
 @click.option("--provider", "-P", default=None, help="LLM provider to use")
 @click.option("--model", "-m", default=None, help="Model to use")
 @click.option("--personality", "-L", default=None, help="Personality to use")
-def refactor(code: str, provider: Optional[str], model: Optional[str], personality: Optional[str]):
+def refactor(code: str, provider: str | None, model: str | None, personality: str | None):
     """Refactor code with Bürokratie Mode."""
     config = load_config()
-    
+
     if provider:
         config["api"]["provider"] = provider
     if model:
         config["api"]["model"] = model
     if personality:
         config["personality"]["active"] = personality
-    
+
     api = create_api_client(config)
-    
+
     if personality:
         api.set_personality(personality)
-    
+
     satire = SatireEngine()
     harness = CodingHarness(api, satire)
 
@@ -271,14 +279,13 @@ def refactor(code: str, provider: Optional[str], model: Optional[str], personali
 @cli.command()
 def tui():
     """Start the Text User Interface."""
-    import os
     os.environ["CLOUDKOT_TUI"] = "1"
-    
+
     from tui import create_tui
-    
+
     config = load_config()
     api = create_api_client(config)
-    
+
     tui = create_tui(api, config)
     tui.start()
 
@@ -287,8 +294,9 @@ def tui():
 def mcp():
     """Start the MCP server."""
     from mcp_server import mcp_server
+
     import asyncio
-    
+
     print("Starting Cloudkot MCP server...")
     asyncio.run(mcp_server.start())
 
@@ -303,6 +311,4 @@ def permissions():
 
 
 if __name__ == "__main__":
-    # Import os for provider manager
-    import os
     cli()

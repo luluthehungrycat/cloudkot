@@ -3,30 +3,31 @@ Base Skill class for Cloudkot
 All skills inherit from this base class
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any
+
 from pydantic import BaseModel
-import asyncio
 
 
 class SkillResult(BaseModel):
     """Result of a skill execution"""
+
     success: bool
     output: Any = None
-    error: Optional[str] = None
+    error: str | None = None
     tokens_used: int = 0
     skill_name: str = ""
 
 
 class BaseSkill:
     """Base class for all Cloudkot skills"""
-    
-    def __init__(self, name: str, description: str, required_permissions: List[str] = None):
+
+    def __init__(self, name: str, description: str, required_permissions: list[str] | None = None):
         self.name = name
         self.description = description
         self.required_permissions = required_permissions or []
         self.enabled = True
 
-    async def execute(self, **kwargs) -> SkillResult:
+    async def execute(self, **kwargs: Any) -> SkillResult:
         """
         Execute the skill
         Must be implemented by subclasses
@@ -40,5 +41,5 @@ class BaseSkill:
                 return False
         return True
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"Skill({self.name}: {self.description})"

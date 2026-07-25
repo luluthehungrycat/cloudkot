@@ -5,7 +5,8 @@ Handles different personality profiles for the coding agent
 
 import tomllib
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Any
+
 from pydantic import BaseModel
 
 
@@ -20,17 +21,17 @@ class PersonalityConfig(BaseModel):
 class PersonalityManager:
     def __init__(self, config_path: str = "personalities.toml"):
         self.config_path = Path(config_path)
-        self.personalities: Dict[str, PersonalityConfig] = {}
+        self.personalities: dict[str, PersonalityConfig] = {}
         self._load_personalities()
 
     def _load_personalities(self):
         """Load personality configurations from TOML file"""
         if not self.config_path.exists():
             raise FileNotFoundError(f"Personality config file not found: {self.config_path}")
-            
+
         with open(self.config_path, "rb") as f:
             config = tomllib.load(f)
-            
+
         if "personalities" in config:
             for personality_name, personality_data in config["personalities"].items():
                 self.personalities[personality_name] = PersonalityConfig(**personality_data)
@@ -56,7 +57,7 @@ class PersonalityManager:
         personality = self.get_personality(personality_name)
         return personality.top_p
 
-    def list_personalities(self) -> list:
+    def list_personalities(self) -> list[str]:
         """List all available personalities"""
         return list(self.personalities.keys())
 
@@ -66,15 +67,21 @@ class PersonalityManager:
             config = tomllib.load(f)
         return config.get("default", {}).get("personality", "neutral")
 
-    def create_custom_personality(self, name: str, description: str, system_prompt: str, 
-                                  temperature: float = 0.7, top_p: float = 0.9) -> PersonalityConfig:
+    def create_custom_personality(
+        self,
+        name: str,
+        description: str,
+        system_prompt: str,
+        temperature: float = 0.7,
+        top_p: float = 0.9,
+    ) -> PersonalityConfig:
         """Create a custom personality configuration"""
         config = PersonalityConfig(
             name=name,
             description=description,
             system_prompt=system_prompt,
             temperature=temperature,
-            top_p=top_p
+            top_p=top_p,
         )
         self.personalities[name] = config
         return config
