@@ -26,7 +26,7 @@ class PersonalityManager:
     def _load_personalities(self):
         """Load personality configurations from TOML file"""
         if not self.config_path.exists():
-            raise FileNotFoundError(f"Personality config file not found: {self.config_path}")
+            return
 
         with open(self.config_path, "rb") as f:
             config = tomllib.load(f)
