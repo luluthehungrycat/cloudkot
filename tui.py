@@ -7,7 +7,6 @@ from enum import Enum
 from typing import Any
 
 
-
 class TUIMode(Enum):
     CHAT = "chat"
     COMMAND = "command"

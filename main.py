@@ -6,6 +6,7 @@ Der deutsche KI-Code-Assistent mit Bürokratie-Modus
 import asyncio
 import os
 import re
+
 try:
     import tomllib
 except ModuleNotFoundError:
@@ -309,9 +310,9 @@ def tui():
 @cli.command()
 def mcp():
     """Start the MCP server."""
-    from mcp_server import mcp_server
-
     import asyncio
+
+    from mcp_server import mcp_server
 
     print("Starting Cloudkot MCP server...")
     asyncio.run(mcp_server.start())

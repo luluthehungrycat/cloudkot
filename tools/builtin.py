@@ -3,14 +3,12 @@
 Each tool is an async function that takes keyword arguments and returns a string result.
 """
 
-import asyncio
 import fnmatch
 import glob
 import os
 import re
 import subprocess
 from typing import Any
-
 
 # ---------------------------------------------------------------------------
 # Safety helpers
@@ -54,7 +52,7 @@ async def read_file_handler(path: str) -> str:
     """
     # Resolve relative to CWD if not absolute
     try:
-        with open(path, "r", encoding="utf-8", errors="replace") as f:
+        with open(path, encoding="utf-8", errors="replace") as f:
             content = f.read()
         return content
     except FileNotFoundError:
@@ -100,7 +98,7 @@ async def grep_files_handler(pattern: str, include: str = "*") -> str:
         pattern: Regular expression to search for.
         include: Glob pattern to filter files (default '*').
     """
-    MAX_MATCHES = 50
+    max_matches = 50
     results: list[str] = []
     root = os.getcwd()
 
@@ -125,24 +123,24 @@ async def grep_files_handler(pattern: str, include: str = "*") -> str:
         for fname in matched_names:
             fpath = os.path.join(dirpath, fname)
             try:
-                with open(fpath, "r", encoding="utf-8", errors="replace") as f:
+                with open(fpath, encoding="utf-8", errors="replace") as f:
                     for lineno, line in enumerate(f, start=1):
                         if compiled.search(line):
                             rel_path = os.path.relpath(fpath, root)
                             results.append(f"{rel_path}:{lineno}: {line.rstrip()}")
-                            if len(results) >= MAX_MATCHES:
+                            if len(results) >= max_matches:
                                 break
             except (OSError, UnicodeDecodeError):
                 continue
-            if len(results) >= MAX_MATCHES:
+            if len(results) >= max_matches:
                 break
-        if len(results) >= MAX_MATCHES:
+        if len(results) >= max_matches:
             break
 
     if not results:
         return "No matches found."
 
-    lines = [f"Found {len(results)} match(es) (showing first {MAX_MATCHES}):", ""]
+    lines = [f"Found {len(results)} match(es) (showing first {max_matches}):", ""]
     lines.extend(results)
     return "\n".join(lines)
 
@@ -179,7 +177,7 @@ async def run_command_handler(command: str, timeout: int = 30) -> str:
 
     # Truncate to 2000 characters
     if len(output) > 2000:
-        output = output[:2000] + f"\n... (truncated to 2000 chars)"
+        output = output[:2000] + "\n... (truncated to 2000 chars)"
 
     return output
 

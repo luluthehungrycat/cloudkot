@@ -11,9 +11,9 @@ class TestIntegration:
     def test_full_workflow(self):
         """Test a complete workflow from config to response"""
         from api_client import APIClient
-        from satire.engine import SatireEngine
         from context_manager import context_manager
         from permissions import permission_manager
+        from satire.engine import SatireEngine
         from skills.skill_manager import skill_manager
 
         # Create API client
@@ -78,13 +78,14 @@ class TestIntegration:
     @pytest.mark.asyncio
     async def test_async_components(self):
         """Test async components work correctly"""
-        from satire.engine import SatireEngine
         from harness import CodingHarness
+        from satire.engine import SatireEngine
 
         # Create a mock API client
         class MockAPIClient:
-            async def chat(self, messages):
-                return "Mock response"
+            async def chat(self, messages, use_context=True, tools=None):
+                from api_client import ChatResult
+                return ChatResult(content="Mock response")
             async def close(self):
                 pass
 
@@ -118,7 +119,7 @@ class TestIntegration:
 
     def test_permission_integration(self):
         """Test permission system integration"""
-        from permissions import permission_manager, PermissionLevel
+        from permissions import PermissionLevel, permission_manager
 
         # Test permission checks
         permission_manager.set_permission("test_perm", PermissionLevel.ALLOW)

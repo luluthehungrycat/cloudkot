@@ -5,11 +5,10 @@ Core coding logic and functionality
 
 import json
 
-from api_client import APIClient, Message, ChatResult
+from api_client import APIClient, Message
 from satire.engine import SatireEngine
 from satire.forms import FormGenerator
-from tools import get_tool_definitions, execute_tool, list_tools
-
+from tools import execute_tool, get_tool_definitions, list_tools
 
 MAX_TOOL_ITERATIONS = 10
 
@@ -22,13 +21,13 @@ class CodingHarness:
 
     async def _run_agent_loop(self, messages: list[Message], context: str | None = None) -> str:
         """Run the tool-calling agent loop.
-        
+
         Sends messages with tool definitions, handles tool calls by executing
         tools and feeding results back, until the model returns a final response.
         """
         tool_defs = get_tool_definitions()
         available_tools = list_tools()
-        
+
         # Build a system-level message explaining tools if they exist
         system_msg = Message(
             role="system",
@@ -55,13 +54,13 @@ class CodingHarness:
                         "arguments": json.dumps(tc.arguments),
                     }
                 } for tc in result.tool_calls]
-                
+
                 messages.append(Message(
                     role="assistant",
                     content=None,
                     tool_calls=tool_calls_list,
                 ))
-                
+
                 # Execute each tool and add individual tool result messages
                 for tc in result.tool_calls:
                     tool_output = await execute_tool(tc.name, tc.arguments)
@@ -71,13 +70,13 @@ class CodingHarness:
                         tool_call_id=tc.id,
                         name=tc.name,
                     ))
-                
+
                 continue  # Go to next iteration
 
             # No tool calls — return the content
             if result.content:
                 return self.satire.wrap_response(result.content, context)
-            
+
             return self.satire.wrap_response("(No response generated)", context)
 
         return self.satire.wrap_response(

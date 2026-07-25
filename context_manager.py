@@ -5,6 +5,7 @@ Handles context window tracking and compression
 
 import hashlib
 import time
+
 try:
     import tomllib
 except ModuleNotFoundError:

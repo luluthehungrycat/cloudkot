@@ -3,8 +3,9 @@ Unit tests for Skills System
 """
 
 import pytest
-from skills.skill_manager import SkillManager
+
 from skills.base_skill import BaseSkill, SkillResult
+from skills.skill_manager import SkillManager
 
 
 @pytest.fixture

@@ -1,5 +1,5 @@
 import random
-from typing import Optional
+
 
 class SatireEngine:
     def __init__(self, bürokratie_mode: bool = True):
@@ -10,7 +10,7 @@ class SatireEngine:
             "loop": "Formular L-89: Schleifen-Zulassung",
         }
 
-    def wrap_response(self, response: str, context: Optional[str] = None) -> str:
+    def wrap_response(self, response: str, context: str | None = None) -> str:
         if not self.bürokratie_mode:
             return response
 
