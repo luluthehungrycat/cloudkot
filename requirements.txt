@@ -1,0 +1,7 @@
+httpx>=0.25.0
+pydantic>=2.5.0
+click>=8.1.7
+pygls>=1.0.0
+fastapi>=0.109.0
+uvicorn>=0.27.0
+jinja2>=3.1.3
