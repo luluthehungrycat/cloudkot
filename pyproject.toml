@@ -3,7 +3,7 @@ name = "cloudkot"
 version = "0.1.0"
 description = "Der deutsche KI-Code-Assistent mit Bürokratie-Modus"
 authors = ["Mo K <your.email@example.com>"]
-license = "Cloudkot"
+license = "MIT"
 readme = "README.md"
 packages = [
     { include = "cloudkot", from = "." },

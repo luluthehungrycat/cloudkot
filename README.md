@@ -131,10 +131,12 @@ pytest
 
 **Cloudkot Lizenzvertrag (Modifizierte MIT-Lizenz)**
 
+> MIT License – aber bitte füllen Sie zuerst Formular L-101 aus, bevor Sie den Code verwenden.
+
 Diese Software unterliegt einer modifizierten MIT-Lizenz mit folgenden zusätzlichen Bedingungen:
 
 > **§ 3 - Lizenzverlust bei Falschangaben**
-> **FALSCH AUSGEFÜLLTE DIN 400-ANTRÄGE FÜHREN AUTOMATISCH ZUM LIZENZVERLUST DES ANTRASTELLERS AUF LEBENSZEIT.**
+> **FALSCH AUSGEFÜLLTE DIN 400-ANTRÄGE FÜHREN AUTOMATISCH ZUM LIZENZVERLUST DES ANTRAGSTELLERS AUF LEBENSZEIT.**
 
 Die vollständige Lizenz finden Sie in der Datei [LICENSE](LICENSE).
 
