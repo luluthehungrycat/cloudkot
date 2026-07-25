@@ -72,6 +72,19 @@ Bei Beendigung der Nutzung ist die Software in Originalverpackung mit
 allen Formularen an das Bundesamt für Code-Sicherheit zurückzusenden.
 Portokosten trägt der Lizenznehmer.
 
+§ 8 - Datenschutz
+--------------------
+Alle Nutzerdaten werden gemäß DSGVO Art. 6 Abs. 1 lit. f gespeichert.
+Die Speicherdauer beträgt **10 Jahre nach letztem Formular-Eingang**.
+Ein Recht auf Löschung besteht **nicht** (§ 35 BDSG).
+
+§ 9 - Weitergabe an Dritte
+----------------------------
+Der Lizenznehmer stimmt zu, dass alle Code-Änderungen und Merge-Konflikte **automatisch** an:
+- Das Bundesamt für Code-Sicherheit (BaCS)
+- Die GEMA (zur Klärung von Urheberrechten)
+- Herrn Schmidt (Raum 304, zur Kenntnisnahme)
+weitergeleitet werden.
 
 HAFTUNGSAUSSCHLUSS
 ==================
