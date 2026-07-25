@@ -1,0 +1,94 @@
+Cloudkot Lizenzvertrag (Modifizierte MIT-Lizenz)
+==================================================
+
+Copyright (c) 2026 Cloudkot
+
+Hiermit wird unentgeltlich jeder Person, die eine Kopie dieser Software
+und der zugehörigen Dokumentationsdateien (die "Software") erhält,
+die Erlaubnis erteilt, mit der Software ohne Einschränkung zu handhaben,
+einschließlich und ohne Beschränkung der Rechte zur Nutzung, zum Kopieren,
+zur Veränderung, zum Zusammenfügen, zur Veröffentlichung, zur Verbreitung,
+zum Sublizenzieren und/oder zum Verkauf von Kopien der Software, und
+Personen, denen die Software zu diesem Zweck überlassen wird, diese
+Rechte zu gewähren, vorausgesetzt, dass die folgenden Bedingungen erfüllt werden:
+
+Der obige Urheberrechtsvermerk und dieser Erlaubnisvorbehalt sind in allen
+Kopien oder wesentlichen Teilen der Software beizufügen.
+
+DIE SOFTWARE WIRD "WIE BESCHRIEBEN" BEREITGESTELLT, OHNE JEGLICHE GARANTIE,
+AUSDRÜCKLICH ODER STILLSCHWEIGEND, EINSCHLIESSLICH, ABER NICHT BESCHRÄNKT AUF
+DIE GARANTIEN DER MARKTGÄNGIGKEIT, DER EIGNUNG FÜR EINEN BESTIMMTEN ZWECK
+SOWIE DER RECHTSVERLETZUNG. IN KEINEM FALL HAFTEN DIE AUTOREN ODER URHEBERRECHTSINHABER
+FÜR JEGLICHE ANSPRÜCHE, SCHÄDEN ODER ANDERE HAFTUNG, OB IN EINER KLAGE
+AUS VERTRAG ODER AUS UNERLAUBTER HANDLUNG ODER ANDERS, DIE SICH AUS DER SOFTWARE
+ODER DER NUTZUNG DER SOFTWARE ODER GESCHÄFTSABWICKLUNGEN MIT DER SOFTWARE
+ERGEBEN.
+
+
+ZUSÄTZLICHE BEDINGUNGEN (Cloudkot-Spezifisch)
+==============================================
+
+§ 1 - DIN-Normen-Compliance
+----------------------------
+Die Nutzung dieser Software unterliegt der Einhaltung aller anwendbaren
+DIN-Normen, insbesondere DIN 400 (Allgemeine Grundsätze für Normungsarbeit).
+
+§ 2 - Formularpflicht
+---------------------
+Jede Nutzung, Modifikation oder Verteilung dieser Software erfordert die
+vollständige und korrekte Ausfüllung der folgenden Formulare:
+  - Formular V-12: Variable Deklarationsantrag
+  - Formular F-42: Funktionsgenehmigung
+  - Formular L-89: Schleifen-Zulassung
+
+§ 3 - Lizenzverlust bei Falschangaben
+--------------------------------------
+FALSCH AUSGEFÜLLTE FORMULARE L-101 FÜHREN ZU LIZENZVERLUST DES ANTRAGSTELLERS AUF LEBENSZEIT.
+
+Zusätzlich: FALSCH AUSGEFÜLLTE DIN 400-ANTRÄGE FÜHREN AUTOMATISCH ZUM LIZENZVERLUST
+DES ANTRAGSTELLERS AUF LEBENSZEIT.
+
+§ 4 - Bürokratie-Klausel
+-------------------------
+Der Lizenznehmer verpflichtet sich, alle Code-Änderungen gemäß §12 Abs. 3
+der Code-Verordnung zu dokumentieren und in dreifacher Ausfertigung
+beim Bundesamt für Code-Sicherheit (BaCS) einzureichen.
+
+§ 5 - Mehrwertsteuer
+--------------------
+Alle durch die Nutzung dieser Software generierten Code-Zeilen unterliegen
+der deutschen Mehrwertsteuer in Höhe von 19%. Die Abführung obliegt dem
+Lizenznehmer.
+
+§ 6 - Hotline-Pflicht
+---------------------
+Bei Fragen zur Lizenz ist die Hotline des Bundesamts für Code-Sicherheit
+unter +49 (0) 800 1234567 (Mo-Fr, 08:00-12:00 Uhr) zu kontaktieren.
+Bearbeitungsdauer: 6-8 Wochen.
+
+§ 7 - Rückgabepflicht
+---------------------
+Bei Beendigung der Nutzung ist die Software in Originalverpackung mit
+allen Formularen an das Bundesamt für Code-Sicherheit zurückzusenden.
+Portokosten trägt der Lizenznehmer.
+
+
+HAFTUNGSAUSSCHLUSS
+==================
+Die Autoren haften nicht für:
+- Verlorene Lebenszeit durch Bürokratie
+- Psychische Schäden durch Formularausfüllung
+- Finanzielle Verluste durch Mehrwertsteuer
+- Verpasste Deadlines aufgrund von Bearbeitungszeiten
+- Jegliche Folgen der Nutzung dieser Software
+
+
+Genehmigt durch:
+---------------
+Bundesamt für Code-Sicherheit (BaCS)
+Abteilung 4b - Bürokratie und Normen
+Herr Schmidt (Raum 304)
+Aktenzeichen: CLOUDKOT-2026-LIZENZ
+
+"Diese Lizenz ist eine Satire. Bitte füllen Sie Formular L-101 aus, bevor Sie
+lachen."
