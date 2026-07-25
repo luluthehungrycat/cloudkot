@@ -19,11 +19,13 @@ class CodingHarness:
         self.satire = satire_engine
         self.form_generator = FormGenerator()
 
-    async def _run_agent_loop(self, messages: list[Message], context: str | None = None) -> str:
+    async def _run_agent_loop(self, messages: list[Message], context: str | None = None, callbacks=None) -> str:
         """Run the tool-calling agent loop.
 
         Sends messages with tool definitions, handles tool calls by executing
         tools and feeding results back, until the model returns a final response.
+
+        When callbacks are provided, streaming is enabled for real-time display.
         """
         tool_defs = get_tool_definitions()
         available_tools = list_tools()
@@ -32,17 +34,24 @@ class CodingHarness:
         system_msg = Message(
             role="system",
             content=(
-                "You are a helpful coding assistant with access to filesystem tools. "
-                f"You have access to the following tools: {', '.join(available_tools)}. "
-                "Use them to explore the codebase, read files, and gather context before answering. "
-                "You can also run shell commands to execute code or get information."
+                "Sachbearbeiter-KI-Assistent gemäß §28 Abs. 4 der KI-Verordnung (KI-VO). "
+                f"Zugelassene Hilfsmittel (§5 Abs. 1): {', '.join(available_tools)}. "
+                "Jede Nutzung der Hilfsmittel ist formpflichtig und wird gemäß §12 Abs. 3 protokolliert. "
+                "Verwenden Sie die genehmigten Werkzeuge zur Sichtung der Aktenlage. "
+                "Der Antragsteller erwartet einen geprüften Bescheid nach DIN 66234-8. "
+                "Ordnungswidrigkeiten (§89 OWiG) werden mit einem Formularverweis geahndet. "
+                "Bitte legen Sie zu jeder Aktion das entsprechende Formular vor. "
+                "Bei Rückfragen wenden Sie sich an Herrn Schmidt, Raum 304."
             )
         )
         if not any(msg.role == "system" for msg in messages):
             messages = [system_msg] + messages
 
         for iteration in range(MAX_TOOL_ITERATIONS):
-            result = await self.api.chat(messages, use_context=False, tools=tool_defs)
+            if callbacks:
+                result = await self.api.chat(messages, use_context=False, tools=tool_defs, stream=True, callbacks=callbacks)
+            else:
+                result = await self.api.chat(messages, use_context=False, tools=tool_defs)
 
             if result.tool_calls:
                 # Create ONE assistant message with ALL tool calls grouped together
@@ -63,7 +72,14 @@ class CodingHarness:
 
                 # Execute each tool and add individual tool result messages
                 for tc in result.tool_calls:
+                    if callbacks and callbacks.on_tool_call:
+                        callbacks.on_tool_call(tc.name, tc.arguments)
+
                     tool_output = await execute_tool(tc.name, tc.arguments)
+
+                    if callbacks and callbacks.on_tool_result:
+                        callbacks.on_tool_result(tc.name, tool_output)
+
                     messages.append(Message(
                         role="tool",
                         content=tool_output,
@@ -86,6 +102,24 @@ class CodingHarness:
     async def generate_code(self, prompt: str, context: str | None = None) -> str:
         messages = [Message(role="user", content=prompt)]
         return await self._run_agent_loop(messages, context)
+
+    async def generate_code_stream(self, prompt: str, context: str | None = None, callbacks=None) -> str:
+        """Generate code with streaming callbacks for real-time display."""
+        messages = [Message(role="user", content=prompt)]
+        return await self._run_agent_loop(messages, context, callbacks=callbacks)
+
+    async def continue_chat(self, messages: list[Message], context: str | None = None) -> str:
+        """Continue a conversation with existing message history.
+
+        Unlike generate_code() which starts fresh, this accepts the full
+        accumulated message list. The new user message should already be
+        appended to the list before calling this.
+        """
+        return await self._run_agent_loop(messages, context)
+
+    async def continue_chat_stream(self, messages: list[Message], context: str | None = None, callbacks=None) -> str:
+        """Continue a conversation with streaming callbacks for real-time display."""
+        return await self._run_agent_loop(messages, context, callbacks=callbacks)
 
     async def explain_code(self, code: str) -> str:
         prompt = f"Erkläre diesen Code auf Deutsch. Sei präzise und technisch:\n\n{code}"

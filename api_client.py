@@ -5,6 +5,8 @@ OpenAI-compatible API client with provider support
 
 import json
 import os
+from collections.abc import Callable
+from dataclasses import dataclass
 from typing import Any
 
 import httpx
@@ -55,6 +57,15 @@ def _safe_parse_json(response):
             f"API returned non-JSON response (status {response.status_code}). "
             f"Body preview: {body_preview}"
         )
+
+
+@dataclass
+class StreamCallbacks:
+    """Callbacks for real-time streaming of model responses."""
+    on_text: Callable[[str], None] | None = None
+    on_reasoning: Callable[[str], None] | None = None
+    on_tool_call: Callable[[str, dict], None] | None = None
+    on_tool_result: Callable[[str, str], None] | None = None
 
 
 class APIClient:
@@ -110,6 +121,8 @@ class APIClient:
         messages: list[Message],
         use_context: bool = True,
         tools: list[dict] | None = None,
+        stream: bool = False,
+        callbacks: StreamCallbacks | None = None,
     ) -> ChatResult:
         """Send a chat request to the API"""
         # Add system prompt if not already present
@@ -143,6 +156,9 @@ class APIClient:
                 },
                 headers=headers,
             )
+            response.raise_for_status()
+            data = _safe_parse_json(response)
+            return ChatResult(content=str(data["content"][0]["text"]))
         else:
             # Standard OpenAI-compatible endpoint
             request_dict = {
@@ -158,36 +174,104 @@ class APIClient:
             base = self.base_url.rstrip('/')
             if base.endswith('/v1'):
                 base = base[:-3]
-            response = await self.client.post(
-                f"{base}/v1/chat/completions",
-                json=request_dict,
-                headers=headers,
-            )
 
-        response.raise_for_status()
+            if stream:
+                request_dict["stream"] = True
+                # Streaming mode
+                async with self.client.stream(
+                    "POST", f"{base}/v1/chat/completions",
+                    json=request_dict, headers=headers
+                ) as response:
+                    response.raise_for_status()
+                    content_chunks = []
+                    tool_calls_acc: dict[int, dict] = {}
+                    finish_reason = None
 
-        # Handle different response formats
-        if self.provider == "anthropic":
-            data = _safe_parse_json(response)
-            return ChatResult(content=str(data["content"][0]["text"]))
-        else:
-            data = _safe_parse_json(response)
+                    async for line in response.aiter_lines():
+                        if line.startswith("data: "):
+                            data = line[6:].strip()
+                            if data == "[DONE]":
+                                break
+                            chunk = json.loads(data)
+                            # Skip lines with empty choices (e.g. cost info)
+                            if not chunk.get("choices"):
+                                continue
+                            choice = chunk["choices"][0]
+                            delta = choice.get("delta", {})
+                            finish_reason = choice.get("finish_reason")
 
-            message = data["choices"][0]["message"]
-            content = message.get("content")
-            tool_calls_raw = message.get("tool_calls")
+                            # Text content
+                            text = delta.get("content")
+                            if text and callbacks and callbacks.on_text:
+                                callbacks.on_text(text)
+                                content_chunks.append(text)
 
-            tool_calls = None
-            if tool_calls_raw:
-                tool_calls = []
-                for tc in tool_calls_raw:
-                    tool_calls.append(ToolCallResult(
-                        id=tc["id"],
-                        name=tc["function"]["name"],
-                        arguments=json.loads(tc["function"]["arguments"]),
-                    ))
+                            # Reasoning content
+                            reasoning = delta.get("reasoning_content")
+                            if reasoning and callbacks and callbacks.on_reasoning:
+                                callbacks.on_reasoning(reasoning)
 
-            return ChatResult(content=content, tool_calls=tool_calls)
+                            # Tool calls
+                            tool_calls_delta = delta.get("tool_calls")
+                            if tool_calls_delta:
+                                for tc in tool_calls_delta:
+                                    idx = tc["index"]
+                                    if idx not in tool_calls_acc:
+                                        tool_calls_acc[idx] = {
+                                            "id": tc.get("id", ""),
+                                            "type": tc.get("type", "function"),
+                                            "function": {
+                                                "name": tc.get("function", {}).get("name", ""),
+                                                "arguments": tc.get("function", {}).get("arguments", ""),
+                                            }
+                                        }
+                                    else:
+                                        # Accumulate function arguments across chunks
+                                        if "function" in tc:
+                                            if tc["function"].get("name"):
+                                                tool_calls_acc[idx]["function"]["name"] = tc["function"]["name"]
+                                            if tc["function"].get("arguments"):
+                                                tool_calls_acc[idx]["function"]["arguments"] += tc["function"]["arguments"]
+                                            if tc.get("id"):
+                                                tool_calls_acc[idx]["id"] = tc["id"]
+
+                    # Build ChatResult from accumulated data
+                    full_content = "".join(content_chunks)
+
+                    if finish_reason == "tool_calls" and tool_calls_acc:
+                        tool_calls_result = []
+                        for idx in sorted(tool_calls_acc.keys()):
+                            tc = tool_calls_acc[idx]
+                            tool_calls_result.append(ToolCallResult(
+                                id=tc["id"],
+                                name=tc["function"]["name"],
+                                arguments=json.loads(tc["function"]["arguments"]),
+                            ))
+                        return ChatResult(content=full_content or None, tool_calls=tool_calls_result)
+
+                    return ChatResult(content=full_content or None)
+            else:
+                # Non-streaming mode (existing logic)
+                response = await self.client.post(
+                    f"{base}/v1/chat/completions",
+                    json=request_dict,
+                    headers=headers,
+                )
+                response.raise_for_status()
+                data = _safe_parse_json(response)
+                message = data["choices"][0]["message"]
+                content = message.get("content")
+                tool_calls_raw = message.get("tool_calls")
+                tool_calls = None
+                if tool_calls_raw:
+                    tool_calls = []
+                    for tc in tool_calls_raw:
+                        tool_calls.append(ToolCallResult(
+                            id=tc["id"],
+                            name=tc["function"]["name"],
+                            arguments=json.loads(tc["function"]["arguments"]),
+                        ))
+                return ChatResult(content=content, tool_calls=tool_calls)
 
     async def chat_with_context(self, message: str, role: str = "user") -> str:
         """Send a message with context management"""
