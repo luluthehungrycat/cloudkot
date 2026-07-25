@@ -176,6 +176,7 @@ class APIClient:
                 base = base[:-3]
 
             if stream:
+                request_dict["stream"] = True
                 # Streaming mode
                 async with self.client.stream(
                     "POST", f"{base}/v1/chat/completions",
