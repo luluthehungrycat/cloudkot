@@ -38,7 +38,7 @@ build-backend = "poetry.core.masonry.api"
 [tool.poetry.scripts]
 cloudkot = "main:cli"
 cloudkot-tui = "tui:create_tui"
-cloudkot-mcp = "mcp_server:mcp_server.start"
+cloudkot-mcp = "mcp_server:main"
 
 [tool.ruff]
 line-length = 120
@@ -57,3 +57,4 @@ python_version = "3.10"
 warn_return_any = true
 warn_unused_configs = true
 ignore_missing_imports = true
+exclude = ["lsp_server\\.py$"]

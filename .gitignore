@@ -40,3 +40,6 @@ forms/
 
 # Config
 config.toml
+
+# Package lock files
+uv.lock

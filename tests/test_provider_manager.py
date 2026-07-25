@@ -3,8 +3,7 @@ Unit tests for ProviderManager
 """
 
 import pytest
-import os
-from provider_manager import ProviderManager, ProviderConfig
+from provider_manager import ProviderManager
 
 
 @pytest.fixture

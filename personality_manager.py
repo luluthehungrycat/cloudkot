@@ -5,7 +5,6 @@ Handles different personality profiles for the coding agent
 
 import tomllib
 from pathlib import Path
-from typing import Any
 
 from pydantic import BaseModel
 
@@ -65,7 +64,8 @@ class PersonalityManager:
         """Get the default personality from config"""
         with open(self.config_path, "rb") as f:
             config = tomllib.load(f)
-        return config.get("default", {}).get("personality", "neutral")
+        default = config.get("default", {})
+        return str(default.get("personality", "neutral"))
 
     def create_custom_personality(
         self,

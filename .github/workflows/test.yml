@@ -74,13 +74,13 @@ jobs:
       run: |
         pip install ruff
 
-    - name: Run ruff linter (basic checks only)
+    - name: Run ruff linter
       run: |
-        ruff check . --select F,E --ignore E501 || true
+        ruff check . --select F,E --ignore E501
 
   type-check:
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@v4
 
@@ -95,4 +95,4 @@ jobs:
 
     - name: Run mypy type checking
       run: |
-        mypy . --ignore-missing-imports --follow-imports=skip || true
+        mypy . --ignore-missing-imports --follow-imports=skip

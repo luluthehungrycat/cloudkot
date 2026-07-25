@@ -51,6 +51,9 @@ class APIClient:
         self.personality = personality
         self.client = httpx.AsyncClient(timeout=30.0)
 
+        # Ensure api_key is always a string for header construction
+        assert isinstance(self.api_key, str)
+
         # Load personality settings
         self._load_personality_settings()
 
@@ -82,22 +85,16 @@ class APIClient:
         # Add context from context manager if enabled
         if use_context:
             context_messages = context_manager.get_context()
-            messages = context_messages + messages
+            # Convert context dicts to Message objects
+            context_msg_objects = [Message(**m) for m in context_messages]
+            messages = context_msg_objects + messages
 
-        request = ChatRequest(
-            model=self.model,
-            messages=messages,
-            temperature=self.temperature,
-            max_tokens=2048,
-            top_p=self.top_p,
-        )
-
-        headers = {"Authorization": f"Bearer {self.api_key}"}
+        headers = {"Authorization": f"Bearer {self.api_key or ''}"}
 
         # Some providers use different headers
         if self.provider == "anthropic":
             headers = {
-                "x-api-key": self.api_key,
+                "x-api-key": self.api_key or "",
                 "anthropic-version": "2023-06-01",
             }
             # Anthropic uses a different endpoint
@@ -113,6 +110,13 @@ class APIClient:
             )
         else:
             # Standard OpenAI-compatible endpoint
+            request = ChatRequest(
+                model=self.model,
+                messages=messages,
+                temperature=self.temperature,
+                max_tokens=2048,
+                top_p=self.top_p,
+            )
             response = await self.client.post(
                 f"{self.base_url}/v1/chat/completions",
                 json=request.model_dump(),
@@ -123,20 +127,19 @@ class APIClient:
 
         # Handle different response formats
         if self.provider == "anthropic":
-            return response.json()["content"][0]["text"]
+            data = response.json()
+            return str(data["content"][0]["text"])
         else:
-            return response.json()["choices"][0]["message"]["content"]
+            data = response.json()
+            return str(data["choices"][0]["message"]["content"])
 
     async def chat_with_context(self, message: str, role: str = "user") -> str:
         """Send a message with context management"""
-        # Add to context
+        # Add the new message to context first
         context_manager.add_context(message, role)
 
-        # Convert context to messages
-        messages = context_manager.get_context()
-
-        # Add the new message
-        messages.append(Message(role=role, content=message))
+        # Convert context to Message objects (already includes the new message)
+        messages = [Message(**m) for m in context_manager.get_context()]
 
         # Get response
         response = await self.chat(messages, use_context=False)

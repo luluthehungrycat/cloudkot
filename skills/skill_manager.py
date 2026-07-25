@@ -103,11 +103,10 @@ class CodeGenerationSkill(BaseSkill):
             required_permissions=["tool_calls"],
         )
 
-    async def execute(self, prompt: str, language: str = "python", **kwargs: Any) -> SkillResult:
-        # This would integrate with the main API client
+    async def execute(self, **kwargs: Any) -> SkillResult:
         return SkillResult(
             success=True,
-            output=f"Generated {language} code for: {prompt}",
+            output=f"Generated {kwargs.get('language', 'python')} code for: {kwargs.get('prompt', '')}",
             skill_name=self.name,
         )
 
@@ -120,7 +119,8 @@ class CodeExplanationSkill(BaseSkill):
             required_permissions=["tool_calls"],
         )
 
-    async def execute(self, code: str, **kwargs: Any) -> SkillResult:
+    async def execute(self, **kwargs: Any) -> SkillResult:
+        code = kwargs.get("code", "")
         return SkillResult(
             success=True,
             output=f"Explanation of code: {code[:50]}...",
@@ -136,7 +136,8 @@ class CodeRefactoringSkill(BaseSkill):
             required_permissions=["tool_calls"],
         )
 
-    async def execute(self, code: str, **kwargs: Any) -> SkillResult:
+    async def execute(self, **kwargs: Any) -> SkillResult:
+        code = kwargs.get("code", "")
         return SkillResult(
             success=True,
             output=f"Refactored code: {code[:50]}...",
@@ -152,7 +153,8 @@ class CodeReviewSkill(BaseSkill):
             required_permissions=["tool_calls"],
         )
 
-    async def execute(self, code: str, **kwargs: Any) -> SkillResult:
+    async def execute(self, **kwargs: Any) -> SkillResult:
+        code = kwargs.get("code", "")
         return SkillResult(
             success=True,
             output=f"Code review for: {code[:50]}...",
@@ -168,7 +170,8 @@ class DocumentationSkill(BaseSkill):
             required_permissions=["tool_calls"],
         )
 
-    async def execute(self, code: str, **kwargs: Any) -> SkillResult:
+    async def execute(self, **kwargs: Any) -> SkillResult:
+        code = kwargs.get("code", "")
         return SkillResult(
             success=True,
             output=f"Documentation for: {code[:50]}...",

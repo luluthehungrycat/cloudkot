@@ -3,12 +3,9 @@ Text User Interface for Cloudkot
 Provides a rich terminal interface for the coding assistant
 """
 
-import asyncio
-import sys
 from enum import Enum
 from typing import Any
 
-import readline
 
 
 class TUIMode(Enum):
@@ -18,7 +15,7 @@ class TUIMode(Enum):
 
 
 class TUI:
-    def __init__(self, api_client: Any = None, config: dict[str, Any] = None):
+    def __init__(self, api_client: Any = None, config: dict[str, Any] | None = None):
         self.api_client = api_client
         self.config = config or {}
         self.mode = TUIMode.CHAT
@@ -275,6 +272,6 @@ class TUI:
 
 # Singleton instance
 
-def create_tui(api_client: Any = None, config: dict[str, Any] = None) -> TUI:
+def create_tui(api_client: Any = None, config: dict[str, Any] | None = None) -> TUI:
     """Create and return a TUI instance"""
     return TUI(api_client, config)

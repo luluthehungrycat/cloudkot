@@ -3,10 +3,8 @@ Integration tests for Cloudkot
 """
 
 import pytest
-import asyncio
 import tempfile
 import os
-from pathlib import Path
 
 
 @pytest.fixture
@@ -73,13 +71,11 @@ class TestIntegration:
         # Set the config path
         original_cwd = os.getcwd()
         os.chdir(os.path.dirname(temp_config))
-        config_filename = os.path.basename(temp_config)
 
         try:
             # Import and test components
-            from api_client import APIClient, Message
+            from api_client import APIClient
             from satire.engine import SatireEngine
-            from harness import CodingHarness
             from context_manager import context_manager
             from permissions import permission_manager
             from skills.skill_manager import skill_manager
@@ -93,9 +89,6 @@ class TestIntegration:
 
             # Create satire engine
             satire = SatireEngine(bürokratie_mode=True)
-
-            # Create harness
-            harness = CodingHarness(api, satire)
 
             # Test that all components are properly connected
             assert api.base_url == "http://localhost:8080"
@@ -119,10 +112,7 @@ class TestIntegration:
 
     def test_cli_imports(self):
         """Test that CLI imports work correctly"""
-        from main import cli, load_config, create_api_client
-        from api_client import APIClient
         from satire.engine import SatireEngine
-        from harness import CodingHarness
 
         # Test that we can create instances
         satire = SatireEngine()
@@ -155,7 +145,6 @@ class TestIntegration:
     @pytest.mark.asyncio
     async def test_async_components(self):
         """Test async components work correctly"""
-        from api_client import APIClient, Message
         from satire.engine import SatireEngine
         from harness import CodingHarness
 

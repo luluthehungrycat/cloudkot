@@ -35,7 +35,8 @@ def load_config() -> dict[str, Any]:
             "Config file not found. Please create config.toml from the template."
         )
     with open(config_path, "rb") as f:
-        return tomllib.load(f)
+        raw = tomllib.load(f)
+        return dict(raw)  # type: ignore[return-value]
 
 
 def create_api_client(config: dict[str, Any]) -> APIClient:

@@ -6,7 +6,6 @@ Handles different LLM providers with their specific configurations
 import os
 import tomllib
 from pathlib import Path
-from typing import Any
 
 from pydantic import BaseModel
 
@@ -64,13 +63,15 @@ class ProviderManager:
         """Get the default provider from config"""
         with open(self.config_path, "rb") as f:
             config = tomllib.load(f)
-        return config.get("default", {}).get("provider", "local")
+        default = config.get("default", {})
+        return str(default.get("provider", "local"))
 
     def get_default_model(self) -> str:
         """Get the default model from config"""
         with open(self.config_path, "rb") as f:
             config = tomllib.load(f)
-        return config.get("default", {}).get("model", "gpt-4o")
+        default = config.get("default", {})
+        return str(default.get("model", "gpt-4o"))
 
 
 # Singleton instance

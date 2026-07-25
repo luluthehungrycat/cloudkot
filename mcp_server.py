@@ -279,5 +279,11 @@ class MCPServer:
         return f"Explanation: This code {code[:50]}... does something useful."
 
 
+def main():
+    """Entry point for: cloudkot-mcp"""
+    import asyncio
+    asyncio.run(mcp_server.start())
+
+
 # Singleton instance
 mcp_server = MCPServer()

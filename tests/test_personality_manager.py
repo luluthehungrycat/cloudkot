@@ -3,7 +3,7 @@ Unit tests for PersonalityManager
 """
 
 import pytest
-from personality_manager import PersonalityManager, PersonalityConfig
+from personality_manager import PersonalityManager
 
 
 @pytest.fixture

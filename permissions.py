@@ -7,7 +7,6 @@ import asyncio
 import tomllib
 from enum import Enum
 from pathlib import Path
-from typing import Any
 
 
 class PermissionLevel(Enum):

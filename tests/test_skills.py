@@ -3,12 +3,12 @@ Unit tests for Skills System
 """
 
 import pytest
-from skills.skill_manager import SkillManager, skill_manager
+from skills.skill_manager import SkillManager
 from skills.base_skill import BaseSkill, SkillResult
 
 
 @pytest.fixture
-def skill_manager():
+def mgr():
     """Create a SkillManager instance for testing"""
     return SkillManager()
 
@@ -16,9 +16,9 @@ def skill_manager():
 class TestSkillManager:
     """Tests for SkillManager class"""
 
-    def test_list_skills(self, skill_manager):
+    def test_list_skills(self, mgr):
         """Test listing available skills"""
-        skills = skill_manager.list_skills()
+        skills = mgr.list_skills()
 
         # Should have built-in skills
         expected_skills = [
@@ -29,60 +29,60 @@ class TestSkillManager:
         for skill in expected_skills:
             assert skill in skills
 
-    def test_get_skill(self, skill_manager):
+    def test_get_skill(self, mgr):
         """Test getting a specific skill"""
-        skill = skill_manager.get_skill("code_generation")
+        skill = mgr.get_skill("code_generation")
 
         assert skill is not None
         assert skill.name == "code_generation"
         assert skill.description == "Generate code from natural language descriptions"
 
-    def test_get_unknown_skill(self, skill_manager):
+    def test_get_unknown_skill(self, mgr):
         """Test getting an unknown skill"""
-        skill = skill_manager.get_skill("unknown_skill")
+        skill = mgr.get_skill("unknown_skill")
         assert skill is None
 
-    def test_enable_disable_skill(self, skill_manager):
+    def test_enable_disable_skill(self, mgr):
         """Test enabling and disabling skills"""
         # Initially should be enabled
-        skill = skill_manager.get_skill("code_generation")
+        skill = mgr.get_skill("code_generation")
         assert skill.enabled is True
 
         # Disable it
-        skill_manager.disable_skill("code_generation")
+        mgr.disable_skill("code_generation")
         assert skill.enabled is False
 
         # Enable it again
-        skill_manager.enable_skill("code_generation")
+        mgr.enable_skill("code_generation")
         assert skill.enabled is True
 
-    def test_list_enabled_skills(self, skill_manager):
+    def test_list_enabled_skills(self, mgr):
         """Test listing enabled skills"""
-        enabled = skill_manager.list_enabled_skills()
+        enabled = mgr.list_enabled_skills()
 
         # All built-in skills should be enabled by default
         assert "code_generation" in enabled
         assert "code_explanation" in enabled
 
-    def test_can_execute_skill(self, skill_manager):
+    def test_can_execute_skill(self, mgr):
         """Test checking if a skill can be executed"""
         # Enable the skill
-        skill_manager.enable_skill("code_generation")
+        mgr.enable_skill("code_generation")
 
         # Should be able to execute if permissions allow
         # (This test assumes tool_calls permission is allowed)
-        can_execute = skill_manager.can_execute_skill("code_generation")
+        can_execute = mgr.can_execute_skill("code_generation")
         # This might be False if permissions are not set up
         assert isinstance(can_execute, bool)
 
-    def test_can_execute_disabled_skill(self, skill_manager):
+    def test_can_execute_disabled_skill(self, mgr):
         """Test that disabled skills cannot be executed"""
-        skill_manager.disable_skill("code_generation")
+        mgr.disable_skill("code_generation")
 
-        can_execute = skill_manager.can_execute_skill("code_generation")
+        can_execute = mgr.can_execute_skill("code_generation")
         assert can_execute is False
 
-    def test_register_skill(self, skill_manager):
+    def test_register_skill(self, mgr):
         """Test registering a custom skill"""
         class CustomSkill(BaseSkill):
             def __init__(self):
@@ -95,9 +95,9 @@ class TestSkillManager:
                 return SkillResult(success=True, output="Custom skill executed")
 
         custom_skill = CustomSkill()
-        skill_manager.register_skill(custom_skill)
+        mgr.register_skill(custom_skill)
 
-        assert "custom_skill" in skill_manager.list_skills()
+        assert "custom_skill" in mgr.list_skills()
 
 
 class TestBaseSkill:
@@ -136,37 +136,37 @@ class TestBaseSkill:
 class TestBuiltInSkills:
     """Tests for built-in skills"""
 
-    def test_code_generation_skill(self, skill_manager):
+    def test_code_generation_skill(self, mgr):
         """Test code generation skill"""
-        skill = skill_manager.get_skill("code_generation")
+        skill = mgr.get_skill("code_generation")
 
         assert skill is not None
         assert "code" in skill.description.lower()
 
-    def test_code_explanation_skill(self, skill_manager):
+    def test_code_explanation_skill(self, mgr):
         """Test code explanation skill"""
-        skill = skill_manager.get_skill("code_explanation")
+        skill = mgr.get_skill("code_explanation")
 
         assert skill is not None
         assert "explain" in skill.description.lower()
 
-    def test_code_refactoring_skill(self, skill_manager):
+    def test_code_refactoring_skill(self, mgr):
         """Test code refactoring skill"""
-        skill = skill_manager.get_skill("code_refactoring")
+        skill = mgr.get_skill("code_refactoring")
 
         assert skill is not None
         assert "refactor" in skill.description.lower()
 
-    def test_code_review_skill(self, skill_manager):
+    def test_code_review_skill(self, mgr):
         """Test code review skill"""
-        skill = skill_manager.get_skill("code_review")
+        skill = mgr.get_skill("code_review")
 
         assert skill is not None
         assert "review" in skill.description.lower()
 
-    def test_documentation_skill(self, skill_manager):
+    def test_documentation_skill(self, mgr):
         """Test documentation skill"""
-        skill = skill_manager.get_skill("documentation")
+        skill = mgr.get_skill("documentation")
 
         assert skill is not None
         assert "documentation" in skill.description.lower()

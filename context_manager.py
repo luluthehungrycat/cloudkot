@@ -4,6 +4,7 @@ Handles context window tracking and compression
 """
 
 import hashlib
+import time
 import tomllib
 from collections import deque
 from pathlib import Path
@@ -62,6 +63,7 @@ class ContextManager:
             role=role,
             token_count=token_count,
             importance=importance,
+            timestamp=time.time(),
         )
 
         # Check if we need to compress before adding
@@ -83,19 +85,29 @@ class ContextManager:
         if not self.context_window:
             return
 
-        # Sort by importance (keep most important)
-        sorted_context = sorted(self.context_window, key=lambda x: x.importance, reverse=True)
+        now = time.time()
 
-        # Keep top 50% most important items
+        # Score: importance * recency_weight (items within 5 min get a bonus)
+        def score(item: ContextItem) -> float:
+            age = now - item.timestamp
+            recency_bonus = 1.5 if age < 300 else 1.0  # 5 min boost
+            return item.importance * recency_bonus
+
+        # Sort by score descending, keeping most valuable
+        sorted_context = sorted(self.context_window, key=score, reverse=True)
+
+        # Keep top 50% highest-scored items, at least 1
         keep_count = max(1, len(sorted_context) // 2)
 
-        # Rebuild context window with most important items
+        # Rebuild context window preserving chronological order within kept items
+        kept_ids = {id(item) for item in sorted_context[:keep_count]}
         new_window = deque()
         new_token_count = 0
 
-        for item in sorted_context[:keep_count]:
-            new_window.append(item)
-            new_token_count += item.token_count
+        for item in self.context_window:
+            if id(item) in kept_ids:
+                new_window.append(item)
+                new_token_count += item.token_count
 
         self.context_window = new_window
         self.current_tokens = new_token_count

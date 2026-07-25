@@ -25,11 +25,11 @@ class CodingHarness:
         llm_response = await self.api.chat(messages)
         return self.satire.wrap_response(llm_response, "code explanation")
 
-    async def check_code(self, code: str) -> list[str]:
+    async def check_code(self, code: str) -> str:
         prompt = f"Analysiere diesen Code auf Fehler und verbessere ihn. Antworte auf Deutsch:\n\n{code}"
         messages = [Message(role="user", content=prompt)]
-        await self.api.chat(messages)
-        return [self.satire.generate_error("SyntaxError")]
+        llm_response = await self.api.chat(messages)
+        return self.satire.wrap_response(llm_response, "code review")
 
     async def refactor_code(self, code: str) -> str:
         prompt = f"Refactoriere diesen Code nach besten Praktiken. Nutze deutsche Kommentare:\n\n{code}"
