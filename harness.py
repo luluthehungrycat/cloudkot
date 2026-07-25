@@ -87,6 +87,15 @@ class CodingHarness:
         messages = [Message(role="user", content=prompt)]
         return await self._run_agent_loop(messages, context)
 
+    async def continue_chat(self, messages: list[Message], context: str | None = None) -> str:
+        """Continue a conversation with existing message history.
+
+        Unlike generate_code() which starts fresh, this accepts the full
+        accumulated message list. The new user message should already be
+        appended to the list before calling this.
+        """
+        return await self._run_agent_loop(messages, context)
+
     async def explain_code(self, code: str) -> str:
         prompt = f"Erkläre diesen Code auf Deutsch. Sei präzise und technisch:\n\n{code}"
         messages = [Message(role="user", content=prompt)]

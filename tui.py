@@ -169,10 +169,11 @@ class TUI:
         print()
 
     def _get_llm_response(self, message: str) -> str:
-        """Get a response from the LLM via the harness using a persistent event loop."""
+        """Get a response from the LLM via the harness, preserving conversation history."""
         if not self.api_client:
             return "No API client configured. Use /settings to configure."
 
+        from api_client import Message
         from harness import CodingHarness
         from satire.engine import SatireEngine
 
@@ -182,6 +183,11 @@ class TUI:
                 bürokratie_mode=self.config.get("bürokratie", True)
             )
             self._harness = CodingHarness(self.api_client, satire)
+
+        # Build messages from accumulated history + the new prompt
+        msgs = [Message(role=entry["role"], content=entry["content"])
+                for entry in self.history]
+        msgs.append(Message(role="user", content=message))
 
         # Use a persistent event loop instead of asyncio.run()
         try:
@@ -195,7 +201,7 @@ class TUI:
             asyncio.set_event_loop(loop)
 
         try:
-            return loop.run_until_complete(self._harness.generate_code(message))
+            return loop.run_until_complete(self._harness.continue_chat(msgs))
         except Exception as e:
             return f"Error generating response: {e}"
 
