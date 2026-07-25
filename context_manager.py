@@ -5,7 +5,10 @@ Handles context window tracking and compression
 
 import hashlib
 import time
-import tomllib
+try:
+    import tomllib
+except ModuleNotFoundError:
+    import tomli as tomllib
 from collections import deque
 from pathlib import Path
 

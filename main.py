@@ -5,7 +5,11 @@ Der deutsche KI-Code-Assistent mit Bürokratie-Modus
 
 import asyncio
 import os
-import tomllib
+try:
+    import tomllib
+except ModuleNotFoundError:
+    import tomli as tomllib
+
 from pathlib import Path
 from typing import Any
 

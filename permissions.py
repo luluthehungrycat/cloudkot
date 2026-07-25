@@ -4,7 +4,10 @@ Handles tool call permissions and access control
 """
 
 import asyncio
-import tomllib
+try:
+    import tomllib
+except ModuleNotFoundError:
+    import tomli as tomllib
 from enum import Enum
 from pathlib import Path
 
