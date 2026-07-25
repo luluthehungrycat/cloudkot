@@ -1,0 +1,103 @@
+name: Cloudkot CI
+
+on:
+  push:
+    branches: [ main, vibe/** ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-asyncio
+
+    - name: Install optional dependencies
+      run: |
+        pip install pygls fastapi uvicorn jinja2
+
+    - name: Run unit tests
+      run: |
+        python -m pytest tests/test_satire_engine.py -v
+        python -m pytest tests/test_provider_manager.py -v
+        python -m pytest tests/test_personality_manager.py -v
+        python -m pytest tests/test_permissions.py -v
+        python -m pytest tests/test_context_manager.py -v
+        python -m pytest tests/test_skills.py -v
+
+    - name: Run integration tests
+      run: |
+        python -m pytest tests/test_integration.py -v
+
+    - name: Test CLI imports
+      run: |
+        python -c "from main import cli; print('CLI imports OK')"
+        python -c "from api_client import APIClient; print('API client imports OK')"
+        python -c "from satire.engine import SatireEngine; print('Satire engine imports OK')"
+        python -c "from harness import CodingHarness; print('Harness imports OK')"
+
+    - name: Test provider configurations
+      run: |
+        python -c "from provider_manager import provider_manager; print('Providers:', provider_manager.list_providers())"
+
+    - name: Test personality configurations
+      run: |
+        python -c "from personality_manager import personality_manager; print('Personalities:', personality_manager.list_personalities())"
+
+  lint:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.12"
+
+    - name: Install linting tools
+      run: |
+        pip install ruff black
+
+    - name: Run ruff linter
+      run: |
+        ruff check . --ignore E501
+        ruff format . --check
+
+    - name: Run black formatter check
+      run: |
+        black --check .
+
+  type-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.12"
+
+    - name: Install type checking tools
+      run: |
+        pip install mypy pydantic
+
+    - name: Run mypy type checking
+      run: |
+        mypy . --ignore-missing-imports --follow-imports=skip
