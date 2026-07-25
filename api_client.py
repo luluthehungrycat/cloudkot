@@ -3,6 +3,7 @@ API Client for Cloudkot
 OpenAI-compatible API client with provider support
 """
 
+import json
 import os
 from typing import Any
 
@@ -15,8 +16,11 @@ from provider_manager import provider_manager
 
 
 class Message(BaseModel):
-    role: str  # "user" or "assistant"
-    content: str
+    role: str  # "user", "assistant", "system", "tool"
+    content: str | None = None  # Allow None for assistant messages with tool_calls
+    tool_call_id: str | None = None  # For tool result messages
+    name: str | None = None  # Tool name for tool result messages
+    tool_calls: list[dict] | None = None  # For assistant messages with tool calls
 
 
 class ChatRequest(BaseModel):
@@ -25,6 +29,32 @@ class ChatRequest(BaseModel):
     temperature: float | None = 0.7
     max_tokens: int | None = 2048
     top_p: float | None = 0.9
+    tools: list[dict] | None = None  # Tool definitions for tool calling
+
+
+class ToolCallResult(BaseModel):
+    """Result of a tool call from the API response"""
+    id: str
+    name: str
+    arguments: dict[str, Any]
+
+
+class ChatResult(BaseModel):
+    """Structured result from a chat completion"""
+    content: str | None = None
+    tool_calls: list[ToolCallResult] | None = None
+
+
+def _safe_parse_json(response):
+    """Try to parse JSON response, with helpful error on failure."""
+    try:
+        return response.json()
+    except Exception:
+        body_preview = response.text[:500] if response.text else "(empty body)"
+        raise ValueError(
+            f"API returned non-JSON response (status {response.status_code}). "
+            f"Body preview: {body_preview}"
+        )
 
 
 class APIClient:
@@ -75,7 +105,12 @@ class APIClient:
             self.top_p = 0.9
             self.system_prompt = "You are a helpful coding assistant."
 
-    async def chat(self, messages: list[Message], use_context: bool = True) -> str:
+    async def chat(
+        self,
+        messages: list[Message],
+        use_context: bool = True,
+        tools: list[dict] | None = None,
+    ) -> ChatResult:
         """Send a chat request to the API"""
         # Add system prompt if not already present
         if not any(msg.role == "system" for msg in messages):
@@ -110,16 +145,22 @@ class APIClient:
             )
         else:
             # Standard OpenAI-compatible endpoint
-            request = ChatRequest(
-                model=self.model,
-                messages=messages,
-                temperature=self.temperature,
-                max_tokens=2048,
-                top_p=self.top_p,
-            )
+            request_dict = {
+                "model": self.model,
+                "messages": [msg.model_dump(exclude_none=True) for msg in messages],
+                "temperature": self.temperature,
+                "max_tokens": 2048,
+                "top_p": self.top_p,
+            }
+            if tools:
+                request_dict["tools"] = tools
+            # Normalize base_url: strip trailing /v1 if present to avoid duplication
+            base = self.base_url.rstrip('/')
+            if base.endswith('/v1'):
+                base = base[:-3]
             response = await self.client.post(
-                f"{self.base_url}/v1/chat/completions",
-                json=request.model_dump(),
+                f"{base}/v1/chat/completions",
+                json=request_dict,
                 headers=headers,
             )
 
@@ -127,11 +168,26 @@ class APIClient:
 
         # Handle different response formats
         if self.provider == "anthropic":
-            data = response.json()
-            return str(data["content"][0]["text"])
+            data = _safe_parse_json(response)
+            return ChatResult(content=str(data["content"][0]["text"]))
         else:
-            data = response.json()
-            return str(data["choices"][0]["message"]["content"])
+            data = _safe_parse_json(response)
+
+            message = data["choices"][0]["message"]
+            content = message.get("content")
+            tool_calls_raw = message.get("tool_calls")
+
+            tool_calls = None
+            if tool_calls_raw:
+                tool_calls = []
+                for tc in tool_calls_raw:
+                    tool_calls.append(ToolCallResult(
+                        id=tc["id"],
+                        name=tc["function"]["name"],
+                        arguments=json.loads(tc["function"]["arguments"]),
+                    ))
+
+            return ChatResult(content=content, tool_calls=tool_calls)
 
     async def chat_with_context(self, message: str, role: str = "user") -> str:
         """Send a message with context management"""
@@ -143,11 +199,12 @@ class APIClient:
 
         # Get response
         response = await self.chat(messages, use_context=False)
+        response_text = response.content if response.content else ""
 
         # Add response to context
-        context_manager.add_context(response, "assistant")
+        context_manager.add_context(response_text, "assistant")
 
-        return response
+        return response_text
 
     async def close(self):
         """Close the API client"""

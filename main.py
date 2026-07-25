@@ -5,6 +5,7 @@ Der deutsche KI-Code-Assistent mit Bürokratie-Modus
 
 import asyncio
 import os
+import re
 try:
     import tomllib
 except ModuleNotFoundError:
@@ -43,6 +44,16 @@ def load_config() -> dict[str, Any]:
         return dict(raw)  # type: ignore[return-value]
 
 
+def _resolve_env_refs(value: Any) -> Any:
+    """Resolve $VAR and ${VAR} environment variable references in string values."""
+    if not isinstance(value, str):
+        return value
+    def _replace(match):
+        var_name = match.group(1) or match.group(2)
+        return os.getenv(var_name, "")
+    return re.sub(r'\$(\w+)|\$\{(\w+)\}', _replace, value)
+
+
 def create_api_client(config: dict[str, Any]) -> APIClient:
     """Create an API client from configuration"""
     api_config = config.get("api", {})
@@ -53,20 +64,20 @@ def create_api_client(config: dict[str, Any]) -> APIClient:
     if provider != "local":
         try:
             provider_config = provider_manager.get_provider(provider)
-            api_key = api_config.get("api_key") or os.getenv(provider_config.api_key_env)
+            api_key = _resolve_env_refs(api_config.get("api_key")) or os.getenv(provider_config.api_key_env)
             return APIClient(
                 provider=provider,
                 api_key=api_key,
-                model=api_config.get("model", provider_config.models[0] if provider_config.models else "gpt-3.5-turbo"),
+                model=_resolve_env_refs(api_config.get("model", provider_config.models[0] if provider_config.models else "gpt-3.5-turbo")),
             )
         except Exception as e:
             print(f"Warning: Could not load provider {provider}: {e}")
 
     # Fallback to local configuration
     return APIClient(
-        base_url=api_config.get("base_url", "http://localhost:8080"),
-        api_key=api_config.get("api_key", ""),
-        model=api_config.get("model", "mistral-tiny"),
+        base_url=_resolve_env_refs(api_config.get("base_url", "http://localhost:8080")),
+        api_key=_resolve_env_refs(api_config.get("api_key", "")),
+        model=_resolve_env_refs(api_config.get("model", "mistral-tiny")),
     )
 
 
