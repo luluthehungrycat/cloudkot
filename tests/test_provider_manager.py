@@ -4,8 +4,8 @@ Unit tests for ProviderManager
 
 import pytest
 
+from exceptions import ProviderError
 from provider_manager import ProviderManager
-from exceptions import CloudkotValidationError, ProviderError
 
 
 @pytest.fixture

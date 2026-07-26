@@ -2,7 +2,6 @@
 Unit tests for APIClient
 """
 
-import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -50,7 +49,7 @@ class TestAPIClientInit:
                 api_key_env="ANTHROPIC_API_KEY",
                 models=["claude-3"],
             )
-            
+
             # Use local provider to avoid key validation
             client = APIClient(
                 base_url="http://anthropic.com",
@@ -58,7 +57,7 @@ class TestAPIClientInit:
                 model="claude-3",
                 provider="local"
             )
-            
+
             assert client.base_url == "http://anthropic.com"
             assert client.model == "claude-3"
 
@@ -69,7 +68,7 @@ class TestAPIClientInit:
             api_key="",
             model="mistral-tiny"
         )
-        
+
         assert client.provider is None
         assert client.base_url == "http://localhost:8080"
         assert client.model == "mistral-tiny"
@@ -78,7 +77,7 @@ class TestAPIClientInit:
         """Test initialization with invalid provider"""
         with patch("api_client.provider_manager") as mock_provider_mgr:
             mock_provider_mgr.get_provider.side_effect = ProviderError("Unknown provider")
-            
+
             with pytest.raises(ProviderError):
                 APIClient(provider="invalid")
 
@@ -90,18 +89,18 @@ class TestAPIClientInit:
                 api_key_env="OPENAI_API_KEY",
                 models=["gpt-4"],
             )
-            
+
             # Valid OpenAI key
             client = APIClient(
-                provider="openai", 
+                provider="openai",
                 api_key="sk-1234567890abcdef1234567890abcdef123456"
             )
             assert client.api_key == "sk-1234567890abcdef1234567890abcdef123456"
-            
+
             # Invalid OpenAI key - wrong prefix
             with pytest.raises(CloudkotValidationError):
                 APIClient(provider="openai", api_key="invalid-key")
-            
+
             # Invalid OpenAI key - too short
             with pytest.raises(CloudkotValidationError):
                 APIClient(provider="openai", api_key="sk-123")
@@ -139,13 +138,13 @@ class TestAPIClientChat:
             }]
         }
         mock_response.raise_for_status = MagicMock()
-        
+
         with patch.object(mock_api_client.client, 'post', new_callable=AsyncMock) as mock_post:
             mock_post.return_value = mock_response
-            
+
             messages = [Message(role="user", content="Test prompt")]
             result = await mock_api_client.chat(messages)
-            
+
             assert result.content == "Test response"
             assert result.tool_calls is None
             mock_post.assert_called_once()
@@ -171,13 +170,13 @@ class TestAPIClientChat:
             }]
         }
         mock_response.raise_for_status = MagicMock()
-        
+
         with patch.object(mock_api_client.client, 'post', new_callable=AsyncMock) as mock_post:
             mock_post.return_value = mock_response
-            
+
             messages = [Message(role="user", content="Read a file")]
             result = await mock_api_client.chat(messages)
-            
+
             assert result.content == "Let me use a tool"
             assert result.tool_calls is not None
             assert len(result.tool_calls) == 1
@@ -198,13 +197,13 @@ class TestAPIClientChat:
             }]
         }
         mock_response.raise_for_status = MagicMock()
-        
+
         with patch.object(mock_api_client.client, 'post', new_callable=AsyncMock) as mock_post:
             mock_post.return_value = mock_response
-            
+
             messages = [Message(role="user", content="Test")]
             await mock_api_client.chat(messages)
-            
+
             # Check that system message was added
             call_args = mock_post.call_args
             request_json = call_args.kwargs['json']
@@ -217,20 +216,20 @@ class TestAPIClientChat:
         mock_response = MagicMock()
         mock_response.status_code = 401
         mock_response.text = "Unauthorized"
-        
+
         # Make raise_for_status raise an exception
         def raise_error():
             raise Exception("401 Unauthorized")
         mock_response.raise_for_status = raise_error
-        
+
         with patch.object(mock_api_client.client, 'post', new_callable=AsyncMock) as mock_post:
             mock_post.return_value = mock_response
-            
+
             messages = [Message(role="user", content="Test")]
-            
+
             with pytest.raises(APIError) as exc_info:
                 await mock_api_client.chat(messages)
-            
+
             # Check that error was raised with correct info
             assert exc_info.value.provider == "local"
             assert "401" in str(exc_info.value)
@@ -242,12 +241,12 @@ class TestAPIClientChat:
             # Simulate a timeout exception
             import httpx
             mock_post.side_effect = httpx.TimeoutException("Request timed out")
-            
+
             messages = [Message(role="user", content="Test")]
-            
+
             with pytest.raises(APIError) as exc_info:
                 await mock_api_client.chat(messages)
-            
+
             # Check that timeout error was raised
             assert exc_info.value.status_code == 408
 
@@ -259,28 +258,28 @@ class TestAPIClientPersonality:
         """Test setting personality"""
         with patch("api_client.provider_manager") as mock_provider_mgr, \
              patch("api_client.personality_manager") as mock_personality_mgr:
-            
+
             mock_provider_mgr.get_provider.return_value = MagicMock(
                 base_url="http://test.com",
                 api_key_env="TEST_API_KEY",
                 models=["test-model"],
             )
-            
+
             mock_personality = MagicMock()
             mock_personality.temperature = 0.9
             mock_personality.top_p = 0.95
             mock_personality.system_prompt = "Custom system prompt"
             mock_personality_mgr.get_personality.return_value = mock_personality
-            
+
             client = APIClient(
                 base_url="http://test.com",
                 api_key="",
                 model="test-model",
                 provider="local"
             )
-            
+
             client.set_personality("friendly")
-            
+
             assert client.personality == "friendly"
             assert client.temperature == 0.9
             assert client.top_p == 0.95
@@ -304,13 +303,13 @@ class TestAPIClientMetrics:
             }]
         }
         mock_response.raise_for_status = MagicMock()
-        
+
         with patch.object(mock_api_client.client, 'post', new_callable=AsyncMock) as mock_post:
             mock_post.return_value = mock_response
-            
+
             messages = [Message(role="user", content="Test")]
             await mock_api_client.chat(messages)
-            
+
             metrics = mock_api_client.get_metrics()
             assert metrics["requests"] == 1
             assert metrics["errors"] == 0
@@ -321,14 +320,14 @@ class TestAPIClientMetrics:
         """Test that errors are tracked in metrics"""
         with patch.object(mock_api_client.client, 'post', new_callable=AsyncMock) as mock_post:
             mock_post.side_effect = Exception("Test error")
-            
+
             messages = [Message(role="user", content="Test")]
-            
+
             try:
                 await mock_api_client.chat(messages)
             except APIError:
                 pass
-            
+
             metrics = mock_api_client.get_metrics()
             assert metrics["requests"] == 1
             assert metrics["errors"] == 1
@@ -362,7 +361,7 @@ class TestMessageModel:
             name="test_tool",
             tool_calls=[{"id": "call_123", "type": "function"}]
         )
-        
+
         assert msg.role == "user"
         assert msg.content == "Test content"
         assert msg.tool_call_id == "call_123"
@@ -376,7 +375,7 @@ class TestMessageModel:
             content=None,
             tool_calls=[{"id": "call_123", "type": "function"}]
         )
-        
+
         assert msg.content is None
         assert msg.tool_calls is not None
 
@@ -387,7 +386,7 @@ class TestChatResultModel:
     def test_chat_result_with_content(self):
         """Test ChatResult with content"""
         result = ChatResult(content="Test response")
-        
+
         assert result.content == "Test response"
         assert result.tool_calls is None
 
@@ -399,7 +398,7 @@ class TestChatResultModel:
             arguments={"path": "test.py"}
         )
         result = ChatResult(content="Using tool", tool_calls=[tool_call])
-        
+
         assert result.content == "Using tool"
         assert len(result.tool_calls) == 1
         assert result.tool_calls[0].name == "read_file"

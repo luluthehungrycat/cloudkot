@@ -12,7 +12,7 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from exceptions import ConfigurationError, ProviderError, CloudkotValidationError
+from exceptions import CloudkotValidationError, ConfigurationError
 
 
 class PersonalityConfig(BaseModel):
@@ -34,7 +34,7 @@ class PersonalityManager:
         """Load personality configurations from TOML file"""
         if self._loaded:
             return
-            
+
         if not self.config_path.exists():
             raise ConfigurationError(
                 f"Personalities configuration file not found: {self.config_path}",
@@ -54,7 +54,7 @@ class PersonalityManager:
                             f"Invalid personality configuration for '{personality_name}': {e}",
                             field=personality_name
                         ) from e
-            
+
             self._loaded = True
         except Exception as e:
             raise ConfigurationError(
@@ -118,7 +118,7 @@ class PersonalityManager:
                 f"Personality '{name}' already exists",
                 field="name"
             )
-        
+
         try:
             config = PersonalityConfig(
                 name=name,

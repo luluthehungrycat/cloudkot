@@ -39,7 +39,7 @@ class ContextManager:
         self.context_window: deque[ContextItem] = deque()
         self.token_counts: dict[str, int] = {}  # Cache for token counts
         self._load_config()
-        
+
         # Try to use tiktoken for accurate token counting
         self._tokenizer = self._get_tokenizer()
 
@@ -78,7 +78,7 @@ class ContextManager:
     def add_context(self, content: str, role: str, importance: float = 1.0) -> ContextItem:
         """Add a new item to the context window"""
         token_count = self._count_tokens(content)
-        
+
         # Check if adding this would exceed max tokens
         if self.current_tokens + token_count > self.max_tokens:
             # Try to compress
@@ -90,7 +90,7 @@ class ContextManager:
                     current_tokens=self.current_tokens + token_count,
                     max_tokens=self.max_tokens
                 )
-        
+
         item = ContextItem(
             content=content,
             role=role,
@@ -111,7 +111,7 @@ class ContextManager:
 
     def _compress_context(self):
         """Compress the context window by removing less important items
-        
+
         Improved compression that preserves:
         1. System messages (always keep)
         2. Recent user messages (last 5)
@@ -123,47 +123,47 @@ class ContextManager:
         now = time.time()
 
         # Separate items by role
-        system_messages = [item for item in self.context_window if item.role == "system"]
+        [item for item in self.context_window if item.role == "system"]
         user_messages = [item for item in self.context_window if item.role == "user"]
         assistant_messages = [item for item in self.context_window if item.role == "assistant"]
-        
+
         # Sort user and assistant messages by importance and recency
         def sort_key(item: ContextItem) -> tuple[float, float]:
             age = now - item.timestamp
             recency_bonus = 1.5 if age < 300 else 1.0  # 5 min boost
             return (-item.importance * recency_bonus, -item.timestamp)
-        
+
         sorted_user = sorted(user_messages, key=sort_key)
         sorted_assistant = sorted(assistant_messages, key=sort_key)
-        
+
         # Keep: all system messages + last 5 user messages + top 30% assistant messages
         keep_count = max(1, len(sorted_assistant) // 3)
-        
+
         kept_ids = set()
         new_window = deque()
         new_token_count = 0
-        
+
         # Add system messages first (in original order)
         for item in self.context_window:
             if item.role == "system" and id(item) not in kept_ids:
                 new_window.append(item)
                 kept_ids.add(id(item))
                 new_token_count += item.token_count
-        
+
         # Add recent user messages (last 5)
         for item in sorted_user[:5]:
             if id(item) not in kept_ids:
                 new_window.append(item)
                 kept_ids.add(id(item))
                 new_token_count += item.token_count
-        
+
         # Add important assistant messages
         for item in sorted_assistant[:keep_count]:
             if id(item) not in kept_ids:
                 new_window.append(item)
                 kept_ids.add(id(item))
                 new_token_count += item.token_count
-        
+
         self.context_window = new_window
         self.current_tokens = new_token_count
 

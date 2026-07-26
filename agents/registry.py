@@ -3,19 +3,16 @@ Agent Registry for Cloudkot
 Central registry for managing all available agents
 """
 
-import sys
-from pathlib import Path
 from typing import Any
 
-# Add current directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent))
+from exceptions import CloudkotValidationError
 
 from .loader import MarkdownAgent, agent_loader
 
 
 class AgentRegistry:
     """Central registry for all agents (builtin + custom)"""
-    
+
     def __init__(self):
         self._agents: dict[str, MarkdownAgent] = {}
         self._builtin_agents: dict[str, MarkdownAgent] = {}
@@ -36,8 +33,8 @@ class AgentRegistry:
             agents = agent_loader.load_all_agents()
             self._custom_agents = agents
             self._agents = {**self._builtin_agents, **self._custom_agents}
-        except Exception as e:
-            print(f"Warning: Could not load custom agents: {e}")
+        except Exception:
+            pass
 
     def register_agent(self, agent: MarkdownAgent):
         """Register a new agent"""
@@ -60,9 +57,6 @@ class AgentRegistry:
         """Get an agent by name"""
         if agent_name not in self._agents:
             available = list(self._agents.keys())
-            # Import here to avoid circular imports
-            sys.path.insert(0, str(Path(__file__).parent.parent))
-            from exceptions import CloudkotValidationError
             raise CloudkotValidationError(
                 f"Unknown agent: {agent_name}. Available: {available}",
                 field="agent"

@@ -39,7 +39,7 @@ class ProviderManager:
         """Load provider configurations from TOML file"""
         if self._loaded:
             return
-            
+
         if not self.config_path.exists():
             raise ConfigurationError(
                 f"Providers configuration file not found: {self.config_path}",
@@ -53,7 +53,7 @@ class ProviderManager:
             if "providers" in config:
                 for provider_name, provider_data in config["providers"].items():
                     self.providers[provider_name] = ProviderConfig(**provider_data)
-            
+
             self._loaded = True
         except Exception as e:
             raise ConfigurationError(

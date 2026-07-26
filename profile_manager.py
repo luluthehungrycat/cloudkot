@@ -16,16 +16,16 @@ from pydantic import BaseModel
 
 # Import exceptions - handle both package and root import
 try:
-    from exceptions import ConfigurationError, CloudkotValidationError
+    from exceptions import CloudkotValidationError, ConfigurationError
 except ModuleNotFoundError:
     # If running from root, add current directory to path
     sys.path.insert(0, str(Path(__file__).parent))
-    from exceptions import ConfigurationError, CloudkotValidationError
+    from exceptions import CloudkotValidationError, ConfigurationError
 
 
 class ProfileConfig(BaseModel):
     """Configuration for a single profile"""
-    
+
     name: str
     description: str
     model: str
@@ -37,7 +37,7 @@ class ProfileConfig(BaseModel):
 
 class ProfileManager:
     """Manages agent profiles for different use cases"""
-    
+
     def __init__(self, config_path: str = "profiles.toml"):
         self.config_path = Path(config_path)
         self.profiles: dict[str, ProfileConfig] = {}
@@ -49,13 +49,13 @@ class ProfileManager:
         """Load profiles from TOML file"""
         if self._loaded:
             return
-        
+
         # Try to load from config path
         if self.config_path.exists():
             try:
                 with open(self.config_path, "rb") as f:
                     config = tomllib.load(f)
-                
+
                 # Load profiles
                 if "profiles" in config:
                     for profile_name, profile_data in config["profiles"].items():
@@ -66,11 +66,11 @@ class ProfileManager:
                                 f"Invalid profile configuration for '{profile_name}': {e}",
                                 config_file=str(self.config_path)
                             ) from e
-                
+
                 # Load default profile
                 if "default" in config:
                     self.default_profile = config["default"].get("profile", "build")
-                
+
                 self._loaded = True
                 return
             except Exception as e:
@@ -78,7 +78,7 @@ class ProfileManager:
                     f"Failed to load profiles from {self.config_path}: {e}",
                     config_file=str(self.config_path)
                 ) from e
-        
+
         # If no config file, create default profiles
         self._create_default_profiles()
         self._loaded = True
@@ -201,14 +201,14 @@ class ProfileManager:
         """Get a profile by name, or the default profile if None"""
         if profile_name is None:
             profile_name = self.default_profile
-        
+
         if profile_name not in self.profiles:
             available = list(self.profiles.keys())
             raise CloudkotValidationError(
                 f"Unknown profile: {profile_name}. Available: {available}",
                 field="profile"
             )
-        
+
         return self.profiles[profile_name]
 
     def list_profiles(self) -> list[str]:

@@ -6,7 +6,7 @@ Standardized error handling across the application
 
 class CloudkotError(Exception):
     """Base exception for all Cloudkot errors"""
-    
+
     def __init__(self, message: str, code: str | None = None):
         self.message = message
         self.code = code
@@ -15,7 +15,7 @@ class CloudkotError(Exception):
 
 class ConfigurationError(CloudkotError):
     """Raised when there's a configuration problem"""
-    
+
     def __init__(self, message: str, config_file: str | None = None):
         self.config_file = config_file
         if config_file:
@@ -25,7 +25,7 @@ class ConfigurationError(CloudkotError):
 
 class ProviderError(CloudkotError):
     """Raised when there's a problem with an LLM provider"""
-    
+
     def __init__(self, message: str, provider: str | None = None):
         self.provider = provider
         if provider:
@@ -35,7 +35,7 @@ class ProviderError(CloudkotError):
 
 class APIError(CloudkotError):
     """Raised when there's an API communication problem"""
-    
+
     def __init__(self, message: str, status_code: int | None = None, provider: str | None = None):
         self.status_code = status_code
         self.provider = provider
@@ -49,7 +49,7 @@ class APIError(CloudkotError):
 
 class PermissionError(CloudkotError):
     """Raised when a permission is denied"""
-    
+
     def __init__(self, message: str, permission: str | None = None):
         self.permission = permission
         if permission:
@@ -59,7 +59,7 @@ class PermissionError(CloudkotError):
 
 class TokenLimitError(CloudkotError):
     """Raised when token limits are exceeded"""
-    
+
     def __init__(self, message: str, current_tokens: int | None = None, max_tokens: int | None = None):
         self.current_tokens = current_tokens
         self.max_tokens = max_tokens
@@ -70,7 +70,7 @@ class TokenLimitError(CloudkotError):
 
 class CloudkotValidationError(CloudkotError):
     """Raised when input validation fails"""
-    
+
     def __init__(self, message: str, field: str | None = None):
         self.field = field
         if field:
@@ -80,7 +80,7 @@ class CloudkotValidationError(CloudkotError):
 
 class SkillError(CloudkotError):
     """Raised when there's a problem with a skill"""
-    
+
     def __init__(self, message: str, skill_name: str | None = None):
         self.skill_name = skill_name
         if skill_name:
@@ -90,7 +90,7 @@ class SkillError(CloudkotError):
 
 class ToolExecutionError(CloudkotError):
     """Raised when a tool execution fails"""
-    
+
     def __init__(self, message: str, tool_name: str | None = None):
         self.tool_name = tool_name
         if tool_name:

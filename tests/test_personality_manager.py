@@ -4,8 +4,8 @@ Unit tests for PersonalityManager
 
 import pytest
 
-from personality_manager import PersonalityManager
 from exceptions import CloudkotValidationError
+from personality_manager import PersonalityManager
 
 
 @pytest.fixture

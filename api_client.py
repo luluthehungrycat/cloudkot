@@ -5,7 +5,6 @@ OpenAI-compatible API client with provider support
 
 import json
 import os
-import re
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
@@ -15,7 +14,7 @@ import tenacity
 from pydantic import BaseModel
 
 from context_manager import context_manager
-from exceptions import APIError, ConfigurationError, ProviderError, CloudkotValidationError
+from exceptions import APIError, CloudkotValidationError, ProviderError
 from personality_manager import personality_manager
 from provider_manager import provider_manager
 
@@ -96,11 +95,11 @@ class APIClient:
 
         self.provider = provider
         self.personality = personality
-        
+
         # Validate API key format if provided
         if self.api_key and not self._validate_api_key_format():
             raise CloudkotValidationError(f"Invalid API key format for provider {self.provider or 'local'}")
-        
+
         self.client = httpx.AsyncClient(timeout=30.0)
 
         # Ensure api_key is always a string for header construction
@@ -108,7 +107,7 @@ class APIClient:
 
         # Load personality settings
         self._load_personality_settings()
-        
+
         # Metrics tracking
         self.metrics = {
             "requests": 0,
@@ -121,7 +120,7 @@ class APIClient:
         """Basic validation of API key format based on provider"""
         if not self.api_key:
             return True  # Empty is allowed (might use env var later)
-        
+
         if self.provider == "openai":
             return self.api_key.startswith("sk-") and len(self.api_key) > 40
         elif self.provider == "anthropic":
@@ -331,7 +330,7 @@ class APIClient:
         except httpx.TimeoutException as e:
             self.metrics["errors"] += 1
             raise APIError(
-                f"API request timed out",
+                "API request timed out",
                 status_code=408,
                 provider=self.provider
             ) from e
@@ -399,7 +398,3 @@ class APIClient:
             "provider": self.provider,
             "model": self.model,
         }
-
-
-# Import ValidationError for backward compatibility
-from pydantic import BaseModel
