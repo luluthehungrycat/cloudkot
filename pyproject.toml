@@ -18,11 +18,10 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
 ]
 packages = [
-    { include = ".", from = "." },
-    
-    { include = "satire", from = "." },
-    { include = "skills", from = "." },
-    { include = "tools", from = "." },
+    { include = "satire" },
+    { include = "skills" },
+    { include = "tools" },
+    { include = "agents" },
 ]
 
 [tool.poetry.dependencies]
