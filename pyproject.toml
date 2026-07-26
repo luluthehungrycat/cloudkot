@@ -18,7 +18,8 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
 ]
 packages = [
-    { include = "cloudkot", from = "." },
+    { include = ".", from = "." },
+    
     { include = "satire", from = "." },
     { include = "skills", from = "." },
     { include = "tools", from = "." },
