@@ -38,8 +38,31 @@ venv.bak/
 # Forms (generated)
 forms/
 
-# Config
+# Config - keep config.toml as example but ignore local config
 config.toml
+!config.toml.example
 
 # Package lock files
 uv.lock
+poetry.lock
+
+# Logs
+*.log
+logs/
+
+# Test coverage
+.coverage
+coverage.xml
+htmlcov/
+.pytest_cache/
+.tox/
+
+# Type checking
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Environment files
+.env
+.env.local
+.env.*.local

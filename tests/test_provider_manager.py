@@ -5,6 +5,7 @@ Unit tests for ProviderManager
 import pytest
 
 from provider_manager import ProviderManager
+from exceptions import CloudkotValidationError, ProviderError
 
 
 @pytest.fixture
@@ -41,7 +42,7 @@ class TestProviderManager:
 
     def test_get_unknown_provider(self, provider_manager):
         """Test getting an unknown provider raises error"""
-        with pytest.raises(ValueError) as exc_info:
+        with pytest.raises(ProviderError) as exc_info:
             provider_manager.get_provider("unknown_provider")
 
         assert "Unknown provider" in str(exc_info.value)
