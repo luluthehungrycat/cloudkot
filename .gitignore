@@ -43,3 +43,6 @@ config.toml
 
 # Package lock files
 uv.lock
+# Custom agents (keep example)
+!.agents/example-agent.md
+.agents/

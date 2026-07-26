@@ -212,3 +212,142 @@ ruff check --fix .
 - PRs via `gh pr create`
 - CI runs on main + PRs (test, lint, type-check)
 - The codebase is on GitHub at `luluthehungrycat/cloudkot`
+
+---
+
+## \ud83d\udcd1 Development Guidelines
+
+### Code Style
+
+- **Line Length**: 120 characters (configured in `pyproject.toml`)
+- **Type Hints**: Always use type hints for function parameters and return values
+- **Docstrings**: Follow Google-style docstrings for public functions
+- **Imports**: Group imports (standard library, third-party, local) with blank lines between
+- **Error Handling**: Use custom exceptions from `exceptions.py` instead of generic ones
+
+### Testing
+
+- **Test Coverage**: Aim for 80%+ coverage
+- **Test Files**: One test file per module (`test_<module>.py`)
+- **Async Tests**: Use `@pytest.mark.asyncio` for async test functions
+- **Mocking**: Use `unittest.mock` for external dependencies
+
+### Documentation
+
+#### CHANGELOG.md
+
+**\u2757 WICHTIG: Das CHANGELOG.md muss bei jeder substanziellen \u00c4nderung aktualisiert werden!**
+
+Das CHANGELOG.md dient als:
+- **Transparenz**: Benutzer sehen, was sich ge\u00e4ndert hat
+- **Nachverfolgbarkeit**: Entwickler k\u00f6nnen \u00c4nderungen nachvollziehen
+- **Kommunikation**: Wichtige \u00c4nderungen werden sichtbar gemacht
+
+**Wann muss das CHANGELOG aktualisiert werden?**
+
+\u2714 **Immer bei:**
+- Neuen Features (\u2705 Added)
+- API-\u00c4nderungen (\ud83d\udc80 Changed)
+- Bugfixes (\ud83d\udcf2 Fixed)
+- Breaking Changes (\u274c Removed, \ud83d\udcd1 Deprecated)
+- Performance-Verbesserungen (\ud83d\udca1 Performance)
+- Sicherheitsfixes (\ud83d\udc89 Security)
+
+\u274c **Nicht n\u00f6tig bei:**
+- Dokumentations-Typos
+- Kommentar-Anpassungen
+- Whitespace-\u00c4nderungen
+- Test-Refactorings ohne Funktions\u00e4nderung
+
+**Format:**
+```markdown
+### \u2705 Added
+- Neue Funktion `xyz()` hinzugef\u00fcgt
+- Unterst\u00fctzung f\u00fcr Python 3.12
+
+### \ud83d\udc80 Changed
+- Standard-Timeout von 30s auf 60s erh\u00f6ht
+
+### \ud83d\udcf2 Fixed
+- Bug in Token-Counting behoben
+```
+
+**Automatisierung:**
+- Vor dem Merge: CHANGELOG pr\u00fcfen und aktualisieren
+- Commit Message Format: `feat: description`, `fix: description`, etc.
+- Tools wie `git-chglog` oder `standard-version` k\u00f6nnen helfen
+
+### Commit Messages
+
+Folgen Sie den [Conventional Commits](https://www.conventionalcommits.org/) Richtlinien:
+
+- `feat: <description>` - Neue Features
+- `fix: <description>` - Bugfixes
+- `docs: <description>` - Dokumentations\u00e4nderungen
+- `style: <description>` - Code-Style-\u00c4nderungen (keine Funktions\u00e4nderung)
+- `refactor: <description>` - Code-Refactoring (keine Funktions\u00e4nderung)
+- `perf: <description>` - Performance-Verbesserungen
+- `test: <description>` - Test-\u00e4nderungen
+- `chore: <description>` - Sonstige \u00c4nderungen (Build, Dependencies, etc.)
+- `revert: <description>` - Revert eines Commits
+
+**Beispiele:**
+```
+feat: Add custom exception hierarchy
+fix: Validate API key format based on provider
+docs: Add ROADMAP.md with development plan
+docs: Add CHANGELOG.md for tracking changes
+chore: Remove requirements.txt, use pyproject.toml only
+```
+
+### Pull Requests
+
+- **Titel**: Kurz und pr\u00e4zise (z.B. "feat: Add profile system")
+- **Beschreibung**: 
+  - Was wird ge\u00e4ndert?
+  - Warum wird es ge\u00e4ndert?
+  - Screenshots (falls UI-\u00c4nderungen)
+  - Breaking Changes markieren
+  - Verkn\u00fcpfte Issues/PRs referenzieren
+- **Tests**: Alle Tests m\u00fcssen passen
+- **Dokumentation**: CHANGELOG.md und ggf. README.md aktualisieren
+
+### Branch Strategy
+
+- **main**: Stabiler Branch (nur Merges von PRs)
+- **vibe/**: Automatisch generierte Branches (f\u00fcr Agenten)
+- **feat/**: Neue Features
+- **fix/**: Bugfixes
+- **docs/**: Dokumentations\u00e4nderungen
+- **refactor/**: Code-Refactoring
+
+---
+
+## \ud83c\udfaf Future Ideas
+
+### Profile System
+- **Prim\u00e4re Profile**: plan, build, review, debug, document, test
+- **Custom Profile**: Benutzerdefinierte Profile in `~/.cloudkot/profiles.toml`
+- **Profile Switching**: `--profile <name>` CLI-Option
+
+### Agent System
+- **Markdown-based Agents**: `.agents/<name>.md` mit Frontmatter-Konfiguration
+- **Agent Registry**: Lokale und globale Agenten
+- **Agent Marketplace**: Community-Agenten teilen
+
+### CLI/TUI Separation
+- **CLI Mode**: Interaktive Shell (aktuelles `tui.py`)
+- **TUI Mode**: Vollwertige Text-UI (neu, \u00e4hnlich OpenCode/Hermes)
+- Entry Points:
+  - `cloudkot` oder `cloudkot cli` - CLI Modus
+  - `cloudkot tui` - TUI Modus
+
+### Installation
+- **uv tool install -e .** - Editable Install f\u00fcr Entwicklung
+- **pip install -e .** - Editable Install (alternativ)
+- **pip install .** - Regul\u00e4re Install
+- **install.sh** - Installationsskript
+
+---
+
+*"Diese Dokumentation unterliegt der Mehrwertsteuer (19%). Bitte bewahren Sie diese Ausgabe f\u00fcr Ihre Unterlagen auf."*
