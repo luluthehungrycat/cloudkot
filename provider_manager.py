@@ -14,6 +14,8 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
+from exceptions import ConfigurationError, ProviderError
+
 
 class ProviderConfig(BaseModel):
     name: str
@@ -30,24 +32,43 @@ class ProviderManager:
     def __init__(self, config_path: str = "providers.toml"):
         self.config_path = Path(config_path)
         self.providers: dict[str, ProviderConfig] = {}
+        self._loaded = False
         self._load_providers()
 
     def _load_providers(self):
         """Load provider configurations from TOML file"""
-        if not self.config_path.exists():
+        if self._loaded:
             return
+            
+        if not self.config_path.exists():
+            raise ConfigurationError(
+                f"Providers configuration file not found: {self.config_path}",
+                config_file=str(self.config_path)
+            )
 
-        with open(self.config_path, "rb") as f:
-            config = tomllib.load(f)
+        try:
+            with open(self.config_path, "rb") as f:
+                config = tomllib.load(f)
 
-        if "providers" in config:
-            for provider_name, provider_data in config["providers"].items():
-                self.providers[provider_name] = ProviderConfig(**provider_data)
+            if "providers" in config:
+                for provider_name, provider_data in config["providers"].items():
+                    self.providers[provider_name] = ProviderConfig(**provider_data)
+            
+            self._loaded = True
+        except Exception as e:
+            raise ConfigurationError(
+                f"Failed to load providers from {self.config_path}: {e}",
+                config_file=str(self.config_path)
+            ) from e
 
     def get_provider(self, provider_name: str) -> ProviderConfig:
         """Get provider configuration by name"""
         if provider_name not in self.providers:
-            raise ValueError(f"Unknown provider: {provider_name}. Available: {list(self.providers.keys())}")
+            available = list(self.providers.keys())
+            raise ProviderError(
+                f"Unknown provider: {provider_name}. Available: {available}",
+                provider=provider_name
+            )
         return self.providers[provider_name]
 
     def get_api_key(self, provider_name: str) -> str | None:
@@ -66,17 +87,29 @@ class ProviderManager:
 
     def get_default_provider(self) -> str:
         """Get the default provider from config"""
-        with open(self.config_path, "rb") as f:
-            config = tomllib.load(f)
-        default = config.get("default", {})
-        return str(default.get("provider", "local"))
+        try:
+            with open(self.config_path, "rb") as f:
+                config = tomllib.load(f)
+            default = config.get("default", {})
+            return str(default.get("provider", "local"))
+        except Exception as e:
+            raise ConfigurationError(
+                f"Failed to get default provider: {e}",
+                config_file=str(self.config_path)
+            ) from e
 
     def get_default_model(self) -> str:
         """Get the default model from config"""
-        with open(self.config_path, "rb") as f:
-            config = tomllib.load(f)
-        default = config.get("default", {})
-        return str(default.get("model", "gpt-4o"))
+        try:
+            with open(self.config_path, "rb") as f:
+                config = tomllib.load(f)
+            default = config.get("default", {})
+            return str(default.get("model", "gpt-4o"))
+        except Exception as e:
+            raise ConfigurationError(
+                f"Failed to get default model: {e}",
+                config_file=str(self.config_path)
+            ) from e
 
 
 # Singleton instance

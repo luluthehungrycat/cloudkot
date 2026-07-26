@@ -10,10 +10,13 @@ try:
     import tomllib
 except ModuleNotFoundError:
     import tomli as tomllib
+
 from collections import deque
 from pathlib import Path
 
 from pydantic import BaseModel
+
+from exceptions import ConfigurationError, TokenLimitError
 
 
 class ContextItem(BaseModel):
@@ -36,6 +39,24 @@ class ContextManager:
         self.context_window: deque[ContextItem] = deque()
         self.token_counts: dict[str, int] = {}  # Cache for token counts
         self._load_config()
+        
+        # Try to use tiktoken for accurate token counting
+        self._tokenizer = self._get_tokenizer()
+
+    def _get_tokenizer(self):
+        """Get the best available tokenizer"""
+        try:
+            import tiktoken
+            return tiktoken.get_encoding("cl100k_base")
+        except ImportError:
+            return None
+
+    def _count_tokens(self, text: str) -> int:
+        """Count tokens using tiktoken if available, otherwise fallback to word count"""
+        if self._tokenizer:
+            return len(self._tokenizer.encode(text))
+        # Fallback: approximate token count (4 characters ~ 1 token)
+        return max(1, len(text) // 4)
 
     def _load_config(self):
         """Load configuration from config file"""
@@ -52,16 +73,24 @@ class ContextManager:
                 self.compression_threshold = config["context"].get("compression_threshold", 0.8)
                 self.current_tokens = config["context"].get("current_tokens", 0)
         except Exception as e:
-            print(f"Warning: Could not load context config: {e}")
-
-    def _count_tokens(self, text: str) -> int:
-        """Simple token counter (approximation)"""
-        # This is a simple approximation - in production, use a proper tokenizer
-        return len(text.split())
+            raise ConfigurationError(f"Failed to load context config: {e}", config_file=str(self.config_path)) from e
 
     def add_context(self, content: str, role: str, importance: float = 1.0) -> ContextItem:
         """Add a new item to the context window"""
         token_count = self._count_tokens(content)
+        
+        # Check if adding this would exceed max tokens
+        if self.current_tokens + token_count > self.max_tokens:
+            # Try to compress
+            if self.compression_enabled:
+                self._compress_context()
+            else:
+                raise TokenLimitError(
+                    f"Adding {token_count} tokens would exceed max_tokens limit",
+                    current_tokens=self.current_tokens + token_count,
+                    max_tokens=self.max_tokens
+                )
+        
         item = ContextItem(
             content=content,
             role=role,
@@ -69,10 +98,6 @@ class ContextManager:
             importance=importance,
             timestamp=time.time(),
         )
-
-        # Check if we need to compress before adding
-        if self.compression_enabled and self._should_compress(token_count):
-            self._compress_context()
 
         self.context_window.append(item)
         self.current_tokens += token_count
@@ -85,34 +110,60 @@ class ContextManager:
         return total_after_add > (self.max_tokens * self.compression_threshold)
 
     def _compress_context(self):
-        """Compress the context window by removing less important items"""
+        """Compress the context window by removing less important items
+        
+        Improved compression that preserves:
+        1. System messages (always keep)
+        2. Recent user messages (last 5)
+        3. Most important items (top 30% by importance)
+        """
         if not self.context_window:
             return
 
         now = time.time()
 
-        # Score: importance * recency_weight (items within 5 min get a bonus)
-        def score(item: ContextItem) -> float:
+        # Separate items by role
+        system_messages = [item for item in self.context_window if item.role == "system"]
+        user_messages = [item for item in self.context_window if item.role == "user"]
+        assistant_messages = [item for item in self.context_window if item.role == "assistant"]
+        
+        # Sort user and assistant messages by importance and recency
+        def sort_key(item: ContextItem) -> tuple[float, float]:
             age = now - item.timestamp
             recency_bonus = 1.5 if age < 300 else 1.0  # 5 min boost
-            return item.importance * recency_bonus
-
-        # Sort by score descending, keeping most valuable
-        sorted_context = sorted(self.context_window, key=score, reverse=True)
-
-        # Keep top 50% highest-scored items, at least 1
-        keep_count = max(1, len(sorted_context) // 2)
-
-        # Rebuild context window preserving chronological order within kept items
-        kept_ids = {id(item) for item in sorted_context[:keep_count]}
+            return (-item.importance * recency_bonus, -item.timestamp)
+        
+        sorted_user = sorted(user_messages, key=sort_key)
+        sorted_assistant = sorted(assistant_messages, key=sort_key)
+        
+        # Keep: all system messages + last 5 user messages + top 30% assistant messages
+        keep_count = max(1, len(sorted_assistant) // 3)
+        
+        kept_ids = set()
         new_window = deque()
         new_token_count = 0
-
+        
+        # Add system messages first (in original order)
         for item in self.context_window:
-            if id(item) in kept_ids:
+            if item.role == "system" and id(item) not in kept_ids:
                 new_window.append(item)
+                kept_ids.add(id(item))
                 new_token_count += item.token_count
-
+        
+        # Add recent user messages (last 5)
+        for item in sorted_user[:5]:
+            if id(item) not in kept_ids:
+                new_window.append(item)
+                kept_ids.add(id(item))
+                new_token_count += item.token_count
+        
+        # Add important assistant messages
+        for item in sorted_assistant[:keep_count]:
+            if id(item) not in kept_ids:
+                new_window.append(item)
+                kept_ids.add(id(item))
+                new_token_count += item.token_count
+        
         self.context_window = new_window
         self.current_tokens = new_token_count
 

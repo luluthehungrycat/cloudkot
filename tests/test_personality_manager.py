@@ -5,6 +5,7 @@ Unit tests for PersonalityManager
 import pytest
 
 from personality_manager import PersonalityManager
+from exceptions import CloudkotValidationError
 
 
 @pytest.fixture
@@ -37,7 +38,7 @@ class TestPersonalityManager:
 
     def test_get_unknown_personality(self, personality_manager):
         """Test getting an unknown personality raises error"""
-        with pytest.raises(ValueError) as exc_info:
+        with pytest.raises(CloudkotValidationError) as exc_info:
             personality_manager.get_personality("unknown_personality")
 
         assert "Unknown personality" in str(exc_info.value)

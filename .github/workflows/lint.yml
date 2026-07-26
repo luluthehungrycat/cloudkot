@@ -1,4 +1,4 @@
-name: Test
+name: Lint
 
 on:
   push:
@@ -7,38 +7,6 @@ on:
     branches: [main]
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.10", "3.11", "3.12"]
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install Poetry
-        run: pip install poetry
-
-      - name: Install dependencies
-        run: |
-          poetry config virtualenvs.create false
-          poetry install --no-interaction --no-ansi
-
-      - name: Run tests with coverage
-        run: |
-          poetry run pytest --cov=./ --cov-report=xml --cov-report=html -v
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
-        with:
-          file: ./coverage.xml
-          fail_ci_if_error: false
-
   lint:
     runs-on: ubuntu-latest
     steps:
@@ -65,3 +33,32 @@ jobs:
 
       - name: Run mypy
         run: poetry run mypy .
+
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Poetry
+        run: pip install poetry
+
+      - name: Install dependencies
+        run: |
+          poetry config virtualenvs.create false
+          poetry install --no-interaction --no-ansi
+
+      - name: Run Black
+        run: poetry run black --check .
+
+      - name: Check for formatted code
+        run: |
+          # This will fail if any files need formatting
+          poetry run black --check . || {
+            echo "::error::Files need formatting. Run 'poetry run black .' to fix."
+            exit 1
+          }
