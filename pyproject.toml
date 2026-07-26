@@ -1,14 +1,27 @@
 [tool.poetry]
 name = "cloudkot"
 version = "0.1.0"
-description = "Der deutsche KI-Code-Assistent mit Bürokratie-Modus"
+description = "Der deutsche KI-Code-Assistent mit B\u00fcrokratie-Modus"
 authors = ["Mo K <your.email@example.com>"]
 license = "MIT"
 readme = "README.md"
+homepage = "https://github.com/luluthehungrycat/cloudkot"
+repository = "https://github.com/luluthehungrycat/cloudkot"
+documentation = "https://github.com/luluthehungrycat/cloudkot#readme"
+keywords = ["ai", "coding", "assistant", "bureaucracy", "satire"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
 packages = [
-    { include = "cloudkot", from = "." },
-    { include = "satire", from = "." },
-    { include = "skills", from = "." },
+    { include = "satire" },
+    { include = "skills" },
+    { include = "tools" },
+    { include = "agents" },
 ]
 
 [tool.poetry.dependencies]
@@ -16,21 +29,20 @@ python = "^3.10"
 httpx = "^0.25.0"
 pydantic = "^2.5.0"
 click = "^8.1.7"
-pygls = "^1.0.0"
-fastapi = "^0.109.0"
-uvicorn = "^0.27.0"
-jinja2 = "^3.1.3"
 prompt-toolkit = "^3.0.0"
-websockets = "^12.0"
-tomli = { version = "^1.2.0", python = "<3.11" }
+tiktoken = "^0.7.0"
+pyyaml = "^6.0.2"
+tenacity = "^8.2.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.0.0"
 pytest-asyncio = "^0.21.0"
+pytest-cov = "^4.1.0"
 black = "^24.1.1"
 ruff = "^0.1.14"
 mypy = "^1.0.0"
 build = "^1.0.0"
+pdoc = "^14.0.0"
 
 [build-system]
 requires = ["poetry-core"]
@@ -59,3 +71,21 @@ warn_return_any = true
 warn_unused_configs = true
 ignore_missing_imports = true
 exclude = ["lsp_server\\.py$"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+
+[tool.coverage.run]
+source = ["."]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+]

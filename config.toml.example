@@ -1,0 +1,28 @@
+# Cloudkot Configuration Example
+# Copy this file to config.toml and adjust the settings
+
+[api]
+# Local provider (e.g., LM Studio, LocalAI, Mistral)
+base_url = "http://localhost:8080"
+api_key = ""
+model = "mistral-tiny"
+provider = "local"
+
+# Alternative: Use a cloud provider
+# provider = "openai"  # or "anthropic", "mistral", "openrouter"
+# api_key = "$OPENAI_API_KEY"  # Will be resolved from environment variable
+# model = "gpt-4o"
+
+[context]
+max_tokens = 32768
+compression_enabled = true
+compression_threshold = 0.8
+
+[personality]
+active = "neutral"  # Options: neutral, stromberg, friendly, pedantic
+
+[permissions]
+tool_calls = "allow"
+file_access = "ask"
+network_access = "deny"
+execute_code = "ask"

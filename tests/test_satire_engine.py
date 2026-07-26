@@ -26,18 +26,17 @@ class TestSatireEngine:
         """Test that Bürokratie mode wraps responses"""
         response = "def add(a, b): return a + b"
         wrapped = satire_engine.wrap_response(response, "function")
-
-        # Should contain bureaucratic elements
-        assert any(header in wrapped for header in [
-            "Gemäß §12 Abs. 3",
-            "Nach Rücksprache mit Abteilung",
+        headers = [
+            "Gem\u00e4\u00df \u00a712 Abs. 3",
+            "Nach R\u00fccksprache mit Abteilung",
             "Laut DIN 66234-8",
             "Aufgrund Ihres Antrags",
             "Sach- und Aktenlage",
             "Az:",
-            "Prüfstelle",
+            "Pr\u00fcfstelle",
             "Datenschutzbeauftragten",
-        ])
+        ]
+        assert any(header in wrapped for header in headers)
 
         # Should contain the original response
         assert response in wrapped

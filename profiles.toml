@@ -28,17 +28,11 @@ Beispiel-Fragen:
 - "Wie kann ich diese API am besten strukturieren?"
 """
 
-# Standard-Permissions f\u00fcr Plan-Profil
-# File Access: allow (f\u00fcr Architektur-Dokumentation lesen)
-# Network Access: deny (keine externen Abh\u00e4ngigkeiten bei Planung)
-# Tool Calls: allow (f\u00fcr Code-Analyse-Tools)
-# Execute Code: ask (nur nach Best\u00e4tigung)
-permissions = { 
-    tool_calls = "allow", 
-    file_access = "allow", 
-    network_access = "deny",
-    execute_code = "ask" 
-}
+# Permissions for Plan profile
+tool_calls = "allow"
+file_access = "allow"
+network_access = "deny"
+execute_code = "ask"
 
 [profiles.build]
 name = "Build"
@@ -65,17 +59,11 @@ Beispiel-Fragen:
 - "Erstelle ein REST-API-Endpoint f\u00fcr..."
 """
 
-# Standard-Permissions f\u00fcr Build-Profil
-# File Access: allow (f\u00fcr Datei-Operationen)
-# Network Access: ask (manchmal f\u00fcr Abh\u00e4ngigkeiten)
-# Tool Calls: allow (f\u00fcr alle Tools)
-# Execute Code: ask (nur nach Best\u00e4tigung)
-permissions = { 
-    tool_calls = "allow", 
-    file_access = "allow", 
-    network_access = "ask",
-    execute_code = "ask" 
-}
+# Permissions for Build profile
+tool_calls = "allow"
+file_access = "allow"
+network_access = "ask"
+execute_code = "ask"
 
 [profiles.review]
 name = "Review"
@@ -101,17 +89,11 @@ Beispiel-Fragen:
 - "Entspricht dieser Code den Best Practices?"
 """
 
-# Standard-Permissions f\u00fcr Review-Profil
-# File Access: allow (f\u00fcr Code-Analyse)
-# Network Access: allow (f\u00fcr Sicherheitschecks)
-# Tool Calls: allow (f\u00fcr alle Tools)
-# Execute Code: deny (keine Ausf\u00fchrung im Review-Modus)
-permissions = { 
-    tool_calls = "allow", 
-    file_access = "allow", 
-    network_access = "allow",
-    execute_code = "deny" 
-}
+# Permissions for Review profile
+tool_calls = "allow"
+file_access = "allow"
+network_access = "allow"
+execute_code = "deny"
 
 [profiles.debug]
 name = "Debug"
@@ -137,17 +119,11 @@ Beispiel-Fragen:
 - "Was k\u00f6nnte die Ursache f\u00fcr dieses Verhalten sein?"
 """
 
-# Standard-Permissions f\u00fcr Debug-Profil
-# File Access: allow (f\u00fcr Log-Analyse)
-# Network Access: allow (f\u00fcr externe Checks)
-# Tool Calls: allow (f\u00fcr alle Tools)
-# Execute Code: ask (nur nach Best\u00e4tigung, kann riskant sein)
-permissions = { 
-    tool_calls = "allow", 
-    file_access = "allow", 
-    network_access = "allow",
-    execute_code = "ask" 
-}
+# Permissions for Debug profile
+tool_calls = "allow"
+file_access = "allow"
+network_access = "allow"
+execute_code = "ask"
 
 [profiles.document]
 name = "Document"
@@ -173,12 +149,11 @@ Beispiel-Fragen:
 - "Erstelle eine API-Dokumentation"
 """
 
-permissions = { 
-    tool_calls = "allow", 
-    file_access = "allow", 
-    network_access = "deny",
-    execute_code = "deny" 
-}
+# Permissions for Document profile
+tool_calls = "allow"
+file_access = "allow"
+network_access = "deny"
+execute_code = "deny"
 
 [profiles.test]
 name = "Test"
@@ -204,13 +179,12 @@ Beispiel-Fragen:
 - "Erstelle Integrationstests f\u00fcr..."
 """
 
-permissions = { 
-    tool_calls = "allow", 
-    file_access = "allow", 
-    network_access = "deny",
-    execute_code = "ask" 
-}
+# Permissions for Test profile
+tool_calls = "allow"
+file_access = "allow"
+network_access = "deny"
+execute_code = "ask"
 
-# Default-Profil
+# Default profile
 [default]
 profile = "build"
