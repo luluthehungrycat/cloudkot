@@ -185,20 +185,20 @@ class CodingHarness:
         """Continue a conversation with streaming callbacks for real-time display."""
         return await self._run_agent_loop(messages, context, callbacks=callbacks, skills=skills)
 
-    async def explain_code(self, code: str) -> str:
+    async def explain_code(self, code: str, skills: list[str] | None = None) -> str:
         prompt = f"Erkläre diesen Code auf Deutsch. Sei präzise und technisch:\n\n{code}"
         messages = [Message(role="user", content=prompt)]
-        return await self._run_agent_loop(messages, "code explanation")
+        return await self._run_agent_loop(messages, "code explanation", skills=skills)
 
     async def check_code(self, code: str) -> str:
         prompt = f"Analysiere diesen Code auf Fehler und verbessere ihn. Antworte auf Deutsch:\n\n{code}"
         messages = [Message(role="user", content=prompt)]
         return await self._run_agent_loop(messages, "code review")
 
-    async def refactor_code(self, code: str) -> str:
+    async def refactor_code(self, code: str, skills: list[str] | None = None) -> str:
         prompt = f"Refactoriere diesen Code nach besten Praktiken. Nutze deutsche Kommentare:\n\n{code}"
         messages = [Message(role="user", content=prompt)]
-        return await self._run_agent_loop(messages, "refactor")
+        return await self._run_agent_loop(messages, "refactor", skills=skills)
 
     async def generate_form(self, code: str, form_type: str) -> str:
         return self.form_generator.generate_form(form_type, code)

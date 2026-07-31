@@ -143,7 +143,10 @@ class APIClient:
             context_msg_objects = [Message(**m) for m in context_messages]
             messages = context_msg_objects + messages
 
-        headers = {"Authorization": f"Bearer {self.api_key or ''}"}
+        # Only include Authorization header if api_key is non-empty
+        headers = {}
+        if self.api_key and self.api_key.strip():
+            headers["Authorization"] = f"Bearer {self.api_key}"
 
         # Some providers use different headers
         if self.provider == "anthropic":
