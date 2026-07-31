@@ -14,29 +14,56 @@ from typing import Any
 # Safety helpers
 # ---------------------------------------------------------------------------
 
-_DESTRUCTIVE_PREFIXES = (
-    "sudo ",
-    "rm -rf /",
-    "rm -rf /*",
-    "rm -rf ~",
-    "rm -rf $HOME",
-    ":(){ :|:& };:",
-    "mkfs.",
-    "dd if=",
-    "> /dev/sd",
-    "| sh",
-    "| bash",
+import re
+
+_DANGEROUS_PATTERNS = (
+    # Destructive file operations
+    (r'\brm\s+', 'rm command'),
+    (r'\bdd\s+', 'dd command'),
+    (r'\bmkfs\b', 'mkfs command'),
+    (r'\bfdisk\b', 'fdisk command'),
+    (r'\bformat\b', 'format command'),
+    (r'\bchmod\s+[0-7]{3,}\s', 'chmod command'),
+    # Chained destructive commands
+    (r';\s*rm', 'chained rm'),
+    (r';\s*dd', 'chained dd'),
+    (r'&&\s*rm', 'chained rm (and)'),
+    (r'&&\s*dd', 'chained dd (and)'),
+    # Piped destructive commands
+    (r'\|\s*(rm|dd|mkfs)', 'piped destructive'),
+    # System file writes
+    (r'>\s*/(dev|proc|sys)', 'write to system'),
+    (r'>\s*/etc', 'write to /etc'),
+    # Privilege escalation
+    (r'\bsudo\b', 'sudo'),
+    (r'\bsu\s', 'su command'),
+    # Package managers
+    (r'\b(apt|yum|dnf|pacman|pip)\s+(install|remove|upgrade)', 'package manager'),
+    (r'\bnpm\s+(install|uninstall)', 'npm package manager'),
+    # Fork bombs
+    (r':\s*\(\s*\)\s*\{', 'fork bomb'),
+    # Overwrite critical files
+    (r'>\s*\.bashrc', 'overwrite .bashrc'),
+    (r'>\s*\.bash_profile', 'overwrite .bash_profile'),
+    (r'>\s*\.profile', 'overwrite .profile'),
+    (r'>\s*\.zshrc', 'overwrite .zshrc'),
 )
 
 
-def _is_safe_command(command: str) -> bool:
-    """Return False if the command looks destructive."""
+def _is_safe_command(command: str) -> tuple[bool, str]:
+    """Check if command is safe to execute.
+    
+    Returns tuple of (is_safe, reason_if_unsafe).
+    Allows safe shell features like pipes and redirects for non-destructive commands.
+    """
     stripped = command.strip()
-    low = stripped.lower()
-    for prefix in _DESTRUCTIVE_PREFIXES:
-        if low.startswith(prefix):
-            return False
-    return True
+    
+    # Check for dangerous patterns
+    for pattern, reason in _DANGEROUS_PATTERNS:
+        if re.search(pattern, stripped, re.IGNORECASE):
+            return False, f"Blocked: {reason} detected"
+    
+    return True, ""
 
 
 # ---------------------------------------------------------------------------
@@ -152,10 +179,12 @@ async def run_command_handler(command: str, timeout: int = 30) -> str:
         command: Shell command to execute.
         timeout: Timeout in seconds (default 30).
     """
-    if not _is_safe_command(command):
+    is_safe, reason = _is_safe_command(command)
+    if not is_safe:
         return (
             f"Error: Command rejected for safety reasons.\n"
-            f"Blocked command: {command}"
+            f"Blocked: {reason}\n"
+            f"Command: {command}"
         )
 
     try:

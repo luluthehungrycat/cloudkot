@@ -104,9 +104,28 @@ class CodeGenerationSkill(BaseSkill):
         )
 
     async def execute(self, **kwargs: Any) -> SkillResult:
+        phase = kwargs.get("phase")
+        messages = kwargs.get("messages", [])
+        content = kwargs.get("content", "")
+        
+        if phase == "preprocess":
+            # Add context about code generation best practices
+            return SkillResult(
+                success=True,
+                output="Remember: Generate clean, well-documented, production-ready code. Follow PEP 8 and include type hints.",
+                skill_name=self.name,
+            )
+        elif phase == "postprocess" and content:
+            # Could add additional context or validation
+            return SkillResult(
+                success=True,
+                output=f"Code generation complete. Output length: {len(content)} characters.",
+                skill_name=self.name,
+            )
+        
         return SkillResult(
-            success=True,
-            output=f"Generated {kwargs.get('language', 'python')} code for: {kwargs.get('prompt', '')}",
+            success=False,
+            error=f"Unknown phase: {phase}",
             skill_name=self.name,
         )
 
@@ -120,10 +139,28 @@ class CodeExplanationSkill(BaseSkill):
         )
 
     async def execute(self, **kwargs: Any) -> SkillResult:
-        code = kwargs.get("code", "")
+        phase = kwargs.get("phase")
+        content = kwargs.get("content", "")
+        messages = kwargs.get("messages", [])
+        
+        if phase == "preprocess":
+            # Add context about explanation requirements
+            return SkillResult(
+                success=True,
+                output="Explain the code clearly: purpose, parameters, return values, side effects, and edge cases.",
+                skill_name=self.name,
+            )
+        elif phase == "postprocess" and content:
+            # Add explanation summary
+            return SkillResult(
+                success=True,
+                output=f"Explanation generated for code snippet of length {len(content)} characters.",
+                skill_name=self.name,
+            )
+        
         return SkillResult(
-            success=True,
-            output=f"Explanation of code: {code[:50]}...",
+            success=False,
+            error=f"Unknown phase: {phase}",
             skill_name=self.name,
         )
 
@@ -137,10 +174,25 @@ class CodeRefactoringSkill(BaseSkill):
         )
 
     async def execute(self, **kwargs: Any) -> SkillResult:
-        code = kwargs.get("code", "")
+        phase = kwargs.get("phase")
+        content = kwargs.get("content", "")
+        
+        if phase == "preprocess":
+            return SkillResult(
+                success=True,
+                output="Refactor for: readability, maintainability, performance, and best practices. Preserve functionality.",
+                skill_name=self.name,
+            )
+        elif phase == "postprocess" and content:
+            return SkillResult(
+                success=True,
+                output=f"Refactoring complete. Refactored output length: {len(content)} characters.",
+                skill_name=self.name,
+            )
+        
         return SkillResult(
-            success=True,
-            output=f"Refactored code: {code[:50]}...",
+            success=False,
+            error=f"Unknown phase: {phase}",
             skill_name=self.name,
         )
 
@@ -154,10 +206,25 @@ class CodeReviewSkill(BaseSkill):
         )
 
     async def execute(self, **kwargs: Any) -> SkillResult:
-        code = kwargs.get("code", "")
+        phase = kwargs.get("phase")
+        content = kwargs.get("content", "")
+        
+        if phase == "preprocess":
+            return SkillResult(
+                success=True,
+                output="Review for: bugs, security issues, performance problems, code smells, and test coverage gaps.",
+                skill_name=self.name,
+            )
+        elif phase == "postprocess" and content:
+            return SkillResult(
+                success=True,
+                output=f"Code review complete for {len(content)} characters of code.",
+                skill_name=self.name,
+            )
+        
         return SkillResult(
-            success=True,
-            output=f"Code review for: {code[:50]}...",
+            success=False,
+            error=f"Unknown phase: {phase}",
             skill_name=self.name,
         )
 
@@ -171,10 +238,25 @@ class DocumentationSkill(BaseSkill):
         )
 
     async def execute(self, **kwargs: Any) -> SkillResult:
-        code = kwargs.get("code", "")
+        phase = kwargs.get("phase")
+        content = kwargs.get("content", "")
+        
+        if phase == "preprocess":
+            return SkillResult(
+                success=True,
+                output="Generate comprehensive documentation: purpose, usage examples, parameters, return values, and edge cases.",
+                skill_name=self.name,
+            )
+        elif phase == "postprocess" and content:
+            return SkillResult(
+                success=True,
+                output=f"Documentation generated for code of length {len(content)} characters.",
+                skill_name=self.name,
+            )
+        
         return SkillResult(
-            success=True,
-            output=f"Documentation for: {code[:50]}...",
+            success=False,
+            error=f"Unknown phase: {phase}",
             skill_name=self.name,
         )
 

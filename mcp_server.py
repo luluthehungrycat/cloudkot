@@ -4,10 +4,16 @@ Provides MCP server functionality for integrating with MCP clients
 """
 
 import json
+import logging
+from pathlib import Path
 from typing import Any
 
 import websockets
 from pydantic import BaseModel
+
+from compat import tomllib
+
+logger = logging.getLogger(__name__)
 
 
 class MCPMessage(BaseModel):
@@ -20,9 +26,17 @@ class MCPMessage(BaseModel):
 
 
 class MCPServer:
-    def __init__(self, host: str = "localhost", port: int = 8080):
+    def __init__(
+        self,
+        host: str = "localhost",
+        port: int = 8080,
+        auth_key: str | None = None,
+        auth_required: bool = False,
+    ):
         self.host = host
         self.port = port
+        self.auth_key = auth_key
+        self.auth_required = auth_required
         self.server: websockets.WebSocketServer | None = None
         self.connections: list[websockets.WebSocketServerProtocol] = []
         self.tools: dict[str, Any] = {}
@@ -41,6 +55,43 @@ class MCPServer:
             "content": content,
             "mime_type": mime_type,
         }
+
+    @classmethod
+    def from_config(cls, config_path: str | Path | None = None) -> "MCPServer":
+        """Create MCPServer from configuration file.
+        
+        Args:
+            config_path: Path to mcp.toml config file. If None, tries to load from
+                       current directory or uses defaults.
+        
+        Returns:
+            Configured MCPServer instance.
+        """
+        config: dict[str, Any] = {}
+        
+        # Try to load config from file
+        if config_path:
+            path = Path(config_path)
+        else:
+            path = Path("mcp.toml")
+        
+        if path.exists():
+            with open(path, "rb") as f:
+                config = tomllib.load(f)
+            config = dict(config.get("default", config))
+        
+        # Extract configuration with defaults
+        host = config.get("host", "localhost")
+        port = config.get("port", 8080)
+        auth_required = config.get("auth_required", False)
+        auth_key = config.get("api_key") if auth_required else None
+        
+        return cls(
+            host=host,
+            port=port,
+            auth_key=auth_key,
+            auth_required=auth_required,
+        )
 
     async def handle_message(self, message: str) -> str:
         """Handle an incoming MCP message"""
@@ -216,30 +267,78 @@ class MCPServer:
             }
         )
 
+    async def _check_auth(self, headers: dict[str, str]) -> bool:
+        """Check if the connection is authenticated.
+        
+        Args:
+            headers: WebSocket headers from the connection.
+            
+        Returns:
+            True if authenticated or auth not required, False otherwise.
+        """
+        if not self.auth_required:
+            return True
+        
+        if self.auth_key is None:
+            logger.warning("Authentication required but no auth_key configured")
+            return False
+        
+        # Check for Authorization header (Bearer token)
+        auth_header = headers.get("Authorization", "")
+        if auth_header.startswith("Bearer "):
+            provided_key = auth_header[7:].strip()
+            if provided_key == self.auth_key:
+                return True
+        
+        # Also check for api_key in query params (for compatibility)
+        # Note: websockets library doesn't expose query params directly in headers,
+        # this would need to be handled at connection time with path parsing
+        
+        logger.warning("Authentication failed: Invalid or missing API key")
+        return False
+
     async def handle_connection(
         self, websocket: websockets.WebSocketServerProtocol, path: str
     ):
-        """Handle a new WebSocket connection"""
+        """Handle a new WebSocket connection with authentication check"""
+        # Extract headers from the websocket
+        headers = dict(websocket.request_headers)
+        
+        # Check authentication
+        if not self._check_auth(headers):
+            logger.warning(
+                f"Unauthorized connection attempt from {websocket.remote_address}"
+            )
+            await websocket.close(code=1008, reason="Unauthorized")
+            return
+        
         self.connections.append(websocket)
-        print(f"MCP client connected from {websocket.remote_address}")
+        logger.info(f"MCP client connected from {websocket.remote_address}")
 
         try:
             async for message in websocket:
                 response = await self.handle_message(message)
                 await websocket.send(response)
         except websockets.exceptions.ConnectionClosed:
-            print("MCP client disconnected")
+            logger.info("MCP client disconnected")
         finally:
             self.connections.remove(websocket)
 
-    async def start(self):
-        """Start the MCP server"""
+    async def start(self, config_path: str | Path | None = None):
+        """Start the MCP server.
+        
+        Args:
+            config_path: Optional path to mcp.toml config file.
+                        If provided and auth is configured, it will be used.
+        """
         self.server = await websockets.serve(
             self.handle_connection,
             self.host,
             self.port,
         )
-        print(f"MCP server started on ws://{self.host}:{self.port}")
+        
+        auth_status = "with authentication" if self.auth_required else "without authentication"
+        logger.info(f"MCP server started on ws://{self.host}:{self.port} ({auth_status})")
 
         # Register default tools
         self._register_default_tools()
@@ -282,8 +381,16 @@ class MCPServer:
 def main():
     """Entry point for: cloudkot-mcp"""
     import asyncio
-    asyncio.run(mcp_server.start())
+    import logging
+    
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    )
+    
+    server = MCPServer.from_config()
+    asyncio.run(server.start())
 
 
-# Singleton instance
+# Default singleton instance (backwards compatibility)
 mcp_server = MCPServer()

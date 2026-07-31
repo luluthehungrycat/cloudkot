@@ -11,14 +11,10 @@ from pygls.lsp.types import (
 from pygls.server import LanguageServer
 
 from api_client import APIClient
+from compat import tomllib
 from harness import CodingHarness
-from satire.engine import SatireEngine
-
-try:
-    import tomllib
-except ModuleNotFoundError:
-    import tomli as tomllib
 from pathlib import Path
+from satire.engine import SatireEngine
 
 
 def load_config() -> dict:

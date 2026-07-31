@@ -1,0 +1,8 @@
+# MCP Server Configuration
+# Set auth_required = true and api_key to enable authentication
+
+[default]
+host = "localhost"
+port = 8080
+auth_required = false
+# api_key = "your-secret-key"  # Uncomment and set if auth_required = true

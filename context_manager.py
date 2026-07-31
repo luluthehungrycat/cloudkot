@@ -5,14 +5,10 @@ Handles context window tracking and compression
 
 import hashlib
 import time
-
-try:
-    import tomllib
-except ModuleNotFoundError:
-    import tomli as tomllib
 from collections import deque
 from pathlib import Path
 
+from compat import tomllib
 from pydantic import BaseModel
 
 
@@ -35,7 +31,16 @@ class ContextManager:
         self.current_tokens: int = 0
         self.context_window: deque[ContextItem] = deque()
         self.token_counts: dict[str, int] = {}  # Cache for token counts
+        self._tokenizer = self._load_tokenizer()
         self._load_config()
+
+    def _load_tokenizer(self):
+        """Load tiktoken encoder, fall back to None"""
+        try:
+            import tiktoken
+            return tiktoken.get_encoding("cl100k_base")
+        except (ImportError, Exception):
+            return None
 
     def _load_config(self):
         """Load configuration from config file"""
@@ -55,9 +60,14 @@ class ContextManager:
             print(f"Warning: Could not load context config: {e}")
 
     def _count_tokens(self, text: str) -> int:
-        """Simple token counter (approximation)"""
-        # This is a simple approximation - in production, use a proper tokenizer
-        return len(text.split())
+        """Count tokens accurately using tiktoken, or approximate with fallback"""
+        if self._tokenizer:
+            return len(self._tokenizer.encode(text))
+        # Fallback: character-based estimation (~4 chars per token)
+        # For very short texts, ensure at least 1 token
+        char_count = len(text)
+        estimated = char_count // 4
+        return max(1, estimated) if char_count > 0 else 0
 
     def add_context(self, content: str, role: str, importance: float = 1.0) -> ContextItem:
         """Add a new item to the context window"""

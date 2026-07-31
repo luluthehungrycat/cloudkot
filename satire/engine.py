@@ -78,7 +78,7 @@ class SatireEngine:
                 if keyword in context.lower():
                     fname = form.lower().replace(' ', '_').replace(':', '')
                     form_hint = ("\n\n📄 *Bitte reichen Sie [" + form + "](forms/"
-                                 + fname + ".pdf) in dreifacher Ausfertigung ein.*")
+                                 + fname + ".txt) in dreifacher Ausfertigung ein.*")
                     break
 
         delay = ""

@@ -3,13 +3,9 @@ Personality Manager for Cloudkot
 Handles different personality profiles for the coding agent
 """
 
-try:
-    import tomllib
-except ModuleNotFoundError:
-    import tomli as tomllib
-
 from pathlib import Path
 
+from compat import tomllib
 from pydantic import BaseModel
 
 

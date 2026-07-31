@@ -212,3 +212,5 @@ ruff check --fix .
 - PRs via `gh pr create`
 - CI runs on main + PRs (test, lint, type-check)
 - The codebase is on GitHub at `luluthehungrycat/cloudkot`
+
+Refer to project-level skills in .agents/skills/ for access to reusable workflows specific to this project.
