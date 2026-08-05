@@ -7,63 +7,51 @@ import fnmatch
 import glob
 import os
 import re
+import shlex
 import subprocess
 from typing import Any
 
-# ---------------------------------------------------------------------------
-# Safety helpers
-# ---------------------------------------------------------------------------
+_ALLOWED_COMMANDS = {
+    "cat",
+    "echo",
+    "grep",
+    "head",
+    "ls",
+    "pwd",
+    "rg",
+    "tail",
+    "wc",
+}
+_MAX_COMMAND_TIMEOUT = 120
 
-import re
 
-_DANGEROUS_PATTERNS = (
-    # Destructive file operations
-    (r'\brm\s+', 'rm command'),
-    (r'\bdd\s+', 'dd command'),
-    (r'\bmkfs\b', 'mkfs command'),
-    (r'\bfdisk\b', 'fdisk command'),
-    (r'\bformat\b', 'format command'),
-    (r'\bchmod\s+[0-7]{3,}\s', 'chmod command'),
-    # Chained destructive commands
-    (r';\s*rm', 'chained rm'),
-    (r';\s*dd', 'chained dd'),
-    (r'&&\s*rm', 'chained rm (and)'),
-    (r'&&\s*dd', 'chained dd (and)'),
-    # Piped destructive commands
-    (r'\|\s*(rm|dd|mkfs)', 'piped destructive'),
-    # System file writes
-    (r'>\s*/(dev|proc|sys)', 'write to system'),
-    (r'>\s*/etc', 'write to /etc'),
-    # Privilege escalation
-    (r'\bsudo\b', 'sudo'),
-    (r'\bsu\s', 'su command'),
-    # Package managers
-    (r'\b(apt|yum|dnf|pacman|pip)\s+(install|remove|upgrade)', 'package manager'),
-    (r'\bnpm\s+(install|uninstall)', 'npm package manager'),
-    # Fork bombs
-    (r':\s*\(\s*\)\s*\{', 'fork bomb'),
-    # Overwrite critical files
-    (r'>\s*\.bashrc', 'overwrite .bashrc'),
-    (r'>\s*\.bash_profile', 'overwrite .bash_profile'),
-    (r'>\s*\.profile', 'overwrite .profile'),
-    (r'>\s*\.zshrc', 'overwrite .zshrc'),
-)
+def _parse_safe_command(command: str, timeout: int) -> tuple[list[str] | None, str]:
+    """Parse and validate a command before it is executed."""
+    if not command.strip():
+        return None, "command must not be empty"
+    if not isinstance(timeout, int) or isinstance(timeout, bool) or not 0 < timeout <= _MAX_COMMAND_TIMEOUT:
+        return None, f"timeout must be an integer between 1 and {_MAX_COMMAND_TIMEOUT} seconds"
+    if any(operator in command for operator in (";", "&&", "||", "|", ">", "<", "`", "$(", "${")):
+        return None, "shell operators and command substitution are not allowed"
+
+    try:
+        arguments = shlex.split(command)
+    except ValueError as error:
+        return None, f"invalid command syntax: {error}"
+    if not arguments:
+        return None, "command must not be empty"
+    if "/" in arguments[0] or "\\" in arguments[0]:
+        return None, "path-qualified executables are not allowed"
+    if arguments[0] not in _ALLOWED_COMMANDS:
+        executable = arguments[0]
+        return None, f"executable is not approved: {executable}"
+    return arguments, ""
 
 
 def _is_safe_command(command: str) -> tuple[bool, str]:
-    """Check if command is safe to execute.
-    
-    Returns tuple of (is_safe, reason_if_unsafe).
-    Allows safe shell features like pipes and redirects for non-destructive commands.
-    """
-    stripped = command.strip()
-    
-    # Check for dangerous patterns
-    for pattern, reason in _DANGEROUS_PATTERNS:
-        if re.search(pattern, stripped, re.IGNORECASE):
-            return False, f"Blocked: {reason} detected"
-    
-    return True, ""
+    """Check whether a command satisfies the constrained execution policy."""
+    arguments, reason = _parse_safe_command(command, 30)
+    return arguments is not None, reason
 
 
 # ---------------------------------------------------------------------------
@@ -179,18 +167,18 @@ async def run_command_handler(command: str, timeout: int = 30) -> str:
         command: Shell command to execute.
         timeout: Timeout in seconds (default 30).
     """
-    is_safe, reason = _is_safe_command(command)
-    if not is_safe:
+    arguments, reason = _parse_safe_command(command, timeout)
+    if arguments is None:
         return (
-            f"Error: Command rejected for safety reasons.\n"
+            "Error: Command rejected for safety reasons.\n"
             f"Blocked: {reason}\n"
             f"Command: {command}"
         )
 
     try:
         result = subprocess.run(
-            command,
-            shell=True,
+            arguments,
+            shell=False,
             capture_output=True,
             text=True,
             timeout=timeout,
@@ -319,7 +307,7 @@ TOOL_DEFINITIONS = [
         "type": "function",
         "function": {
             "name": "run_command",
-            "description": "Run a shell command and return its output. Destructive commands are blocked for safety.",
+            "description": "Run an approved read-only command without shell interpretation. Shell operators and destructive commands are rejected.",
             "parameters": {
                 "type": "object",
                 "properties": {

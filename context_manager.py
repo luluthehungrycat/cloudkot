@@ -8,8 +8,9 @@ import time
 from collections import deque
 from pathlib import Path
 
-from compat import tomllib
 from pydantic import BaseModel
+
+from compat import tomllib
 
 
 class ContextItem(BaseModel):
@@ -60,18 +61,54 @@ class ContextManager:
             print(f"Warning: Could not load context config: {e}")
 
     def _count_tokens(self, text: str) -> int:
-        """Count tokens accurately using tiktoken, or approximate with fallback"""
+        """Count tokens accurately using tiktoken, or approximate with fallback."""
         if self._tokenizer:
             return len(self._tokenizer.encode(text))
-        # Fallback: character-based estimation (~4 chars per token)
-        # For very short texts, ensure at least 1 token
         char_count = len(text)
         estimated = char_count // 4
         return max(1, estimated) if char_count > 0 else 0
 
+    def _count_budget_tokens(self, text: str) -> int:
+        """Use a conservative budget count for exposed context limits."""
+        return max(self._count_tokens(text), len(text.split()))
+
+    def _truncate_text_to_tokens(self, content: str, max_tokens: int) -> str:
+        """Return the longest prefix whose conservative count fits the limit."""
+        if max_tokens <= 0:
+            return ""
+        if self._count_budget_tokens(content) <= max_tokens:
+            return content
+
+        low, high = 0, len(content)
+        while low < high:
+            midpoint = (low + high + 1) // 2
+            if self._count_budget_tokens(content[:midpoint]) <= max_tokens:
+                low = midpoint
+            else:
+                high = midpoint - 1
+        return content[:low]
+
     def add_context(self, content: str, role: str, importance: float = 1.0) -> ContextItem:
-        """Add a new item to the context window"""
-        token_count = self._count_tokens(content)
+        """Add a new item while honoring the configured compression behavior."""
+        if not self.compression_enabled:
+            token_count = self._count_tokens(content)
+            item = ContextItem(
+                content=content,
+                role=role,
+                token_count=token_count,
+                importance=importance,
+                timestamp=time.time(),
+            )
+            self.context_window.append(item)
+            self.current_tokens += token_count
+            return item
+
+        content = self._truncate_to_budget(content)
+        token_count = self._count_budget_tokens(content)
+
+        while self.context_window and self.current_tokens + token_count > self.max_tokens:
+            self._remove_least_valuable_item()
+
         item = ContextItem(
             content=content,
             role=role,
@@ -79,15 +116,25 @@ class ContextManager:
             importance=importance,
             timestamp=time.time(),
         )
-
-        # Check if we need to compress before adding
-        if self.compression_enabled and self._should_compress(token_count):
-            self._compress_context()
-
         self.context_window.append(item)
         self.current_tokens += token_count
-
         return item
+
+    def _truncate_to_budget(self, content: str) -> str:
+        """Return the longest prefix that fits within the configured budget."""
+        return self._truncate_text_to_tokens(content, self.max_tokens)
+
+    def _remove_least_valuable_item(self) -> None:
+        """Remove the lowest-scored retained item from the context."""
+        if not self.context_window:
+            return
+
+        least_valuable = min(
+            self.context_window,
+            key=lambda item: (item.importance, item.timestamp),
+        )
+        self.context_window.remove(least_valuable)
+        self.current_tokens -= least_valuable.token_count
 
     def _should_compress(self, additional_tokens: int = 0) -> bool:
         """Check if context should be compressed"""
@@ -136,15 +183,23 @@ class ContextManager:
 
         # Return context in chronological order
         for item in self.context_window:
-            if current_count + item.token_count > max_tokens:
+            item_content = item.content
+            item_tokens = self._count_budget_tokens(item_content)
+            if current_count + item_tokens > max_tokens:
+                remaining_tokens = max_tokens - current_count
+                item_content = self._truncate_text_to_tokens(item_content, remaining_tokens)
+                item_tokens = self._count_budget_tokens(item_content)
+            if not item_content and item_tokens == 0:
                 break
             result.append(
                 {
                     "role": item.role,
-                    "content": item.content,
+                    "content": item_content,
                 }
             )
-            current_count += item.token_count
+            current_count += item_tokens
+            if current_count >= max_tokens:
+                break
 
         return result
 
