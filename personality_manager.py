@@ -22,8 +22,8 @@ class PersonalityConfig(BaseModel):
 
 
 class PersonalityManager:
-    def __init__(self, config_path: str = "personalities.toml"):
-        self.config_path = Path(config_path)
+    def __init__(self, config_path: str | None = None):
+        self.config_path = Path(config_path) if config_path else Path(__file__).with_name("personalities.toml")
         self.personalities: dict[str, PersonalityConfig] = {}
         self._load_personalities()
 

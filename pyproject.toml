@@ -14,11 +14,14 @@ include = [
     { path = "api_client.py", format = ["sdist", "wheel"] },
     { path = "context_manager.py", format = ["sdist", "wheel"] },
     { path = "harness.py", format = ["sdist", "wheel"] },
+    { path = "lsp_server.py", format = ["sdist", "wheel"] },
     { path = "main.py", format = ["sdist", "wheel"] },
     { path = "mcp_server.py", format = ["sdist", "wheel"] },
     { path = "permissions.py", format = ["sdist", "wheel"] },
+    { path = "personalities.toml", format = ["sdist", "wheel"] },
     { path = "personality_manager.py", format = ["sdist", "wheel"] },
     { path = "provider_manager.py", format = ["sdist", "wheel"] },
+    { path = "providers.toml", format = ["sdist", "wheel"] },
     { path = "tui.py", format = ["sdist", "wheel"] },
 ]
 
