@@ -2,7 +2,10 @@
 
 from pathlib import Path
 
-import tomllib
+try:
+    import tomllib
+except ModuleNotFoundError:
+    import tomli as tomllib
 
 ROOT = Path(__file__).parent.parent
 
@@ -27,3 +30,15 @@ def test_config_example_is_safe_and_loadable(tmp_path, monkeypatch):
     from main import load_config
 
     assert load_config() == config
+
+
+def test_load_config_uses_packaged_example_when_local_config_is_missing(tmp_path, monkeypatch):
+    """An installed CLI must have a safe config path outside the checkout."""
+    monkeypatch.chdir(tmp_path)
+
+    from main import load_config
+
+    config = load_config()
+
+    assert config["api"]["provider"] == "local"
+    assert config["api"]["api_key"] == ""
