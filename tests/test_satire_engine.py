@@ -4,6 +4,7 @@ Unit tests for SatireEngine
 
 import pytest
 
+from satire import engine as satire_engine_module
 from satire.engine import SatireEngine
 
 
@@ -22,8 +23,16 @@ def neutral_engine():
 class TestSatireEngine:
     """Tests for SatireEngine class"""
 
-    def test_bürokratie_mode_on(self, satire_engine):
+    @pytest.mark.parametrize("header_index", range(10))
+    def test_bürokratie_mode_on(self, satire_engine, monkeypatch, header_index):
         """Test that Bürokratie mode wraps responses"""
+        def choose_deterministically(options):
+            if len(options) == 10:
+                return options[header_index]
+            return options[0]
+
+        monkeypatch.setattr(satire_engine_module.random, "choice", choose_deterministically)
+
         response = "def add(a, b): return a + b"
         wrapped = satire_engine.wrap_response(response, "function")
 
@@ -37,6 +46,8 @@ class TestSatireEngine:
             "Az:",
             "Prüfstelle",
             "Datenschutzbeauftragten",
+            "Bezug nehmend auf Ihre Eingabe",
+            "Hiermit ergeht folgender Bescheid",
         ])
 
         # Should contain the original response
