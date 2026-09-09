@@ -75,6 +75,11 @@ def create_api_client(config: dict[str, Any]) -> APIClient:
             )
         except Exception as e:
             print(f"Warning: Could not load provider {provider}: {e}")
+            return APIClient(
+                base_url="http://localhost:8080",
+                api_key="",
+                model="mistral-tiny",
+            )
 
     # Fallback to local configuration
     return APIClient(
