@@ -13,6 +13,7 @@ packages = [
 include = [
     { path = "api_client.py", format = ["sdist", "wheel"] },
     { path = "context_manager.py", format = ["sdist", "wheel"] },
+    { path = "config.toml.example", format = ["sdist", "wheel"] },
     { path = "harness.py", format = ["sdist", "wheel"] },
     { path = "lsp_server.py", format = ["sdist", "wheel"] },
     { path = "main.py", format = ["sdist", "wheel"] },

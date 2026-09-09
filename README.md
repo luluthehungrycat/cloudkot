@@ -47,12 +47,20 @@ pip install -r requirements.txt
 poetry install
 ```
 
-### 2. config.toml anpassen:
+### 2. Konfiguration erstellen:
+```bash
+cp config.toml.example config.toml
+```
+
+Bearbeiten Sie anschließend `config.toml`. Für lokale Modelle bleiben die
+Voreinstellungen ohne API-Key und verwenden `http://localhost:8080`.
+
 ```toml
 [api]
-base_url = "http://localhost:8080"  # z.B. LM Studio, LocalAI, Mistral
-api_key = "dein-api-schlüssel"
-model = "mistral-small-latest"
+provider = "local"
+base_url = "http://localhost:8080"
+api_key = ""
+model = "mistral-tiny"
 ```
 
 ### 3. CLI nutzen:

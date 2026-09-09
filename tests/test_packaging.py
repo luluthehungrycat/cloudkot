@@ -28,7 +28,7 @@ def test_pyproject_declares_only_existing_packages_and_cli_modules():
         "provider_manager.py",
         "tui.py",
     }
-    required_assets = {"personalities.toml", "providers.toml"}
+    required_assets = {"config.toml.example", "personalities.toml", "providers.toml"}
     assert required_modules | required_assets <= declared_files
 
 
