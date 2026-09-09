@@ -1,0 +1,14 @@
+# Copy this file to config.toml and adjust the local model settings.
+# Keep API keys in environment variables or a local, gitignored config.toml.
+
+[api]
+provider = "local"
+base_url = "http://localhost:8080"
+api_key = ""
+model = "mistral-tiny"
+
+[personality]
+active = "neutral"
+
+["bürokratie"]
+enabled = true

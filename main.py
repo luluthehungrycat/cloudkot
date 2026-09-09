@@ -34,8 +34,10 @@ def cli():
 
 
 def load_config() -> dict[str, Any]:
-    """Load configuration from config.toml"""
+    """Load local configuration, falling back to the packaged safe example."""
     config_path = Path("config.toml")
+    if not config_path.exists():
+        config_path = Path(__file__).with_name("config.toml.example")
     if not config_path.exists():
         raise FileNotFoundError(
             "Config file not found. Please create config.toml from the template."
@@ -73,6 +75,11 @@ def create_api_client(config: dict[str, Any]) -> APIClient:
             )
         except Exception as e:
             print(f"Warning: Could not load provider {provider}: {e}")
+            return APIClient(
+                base_url="http://localhost:8080",
+                api_key="",
+                model="mistral-tiny",
+            )
 
     # Fallback to local configuration
     return APIClient(
