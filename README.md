@@ -204,13 +204,13 @@ python main.py generate -p "..." --provider openai --model gpt-4o
 ## ❓ Häufige Probleme
 
 **Problem:** "Event loop is closed"
-**Lösung:** Füllen Sie [Formular E-404](forms/e-404.txt) aus und warten Sie 6-8 Wochen.
+**Lösung:** Füllen Sie [Formular E-404](forms/formular_s-1_syntaxfehler-meldung.txt) aus und warten Sie 6-8 Wochen.
 
 **Problem:** "API Key invalid"
-**Lösung:** Der Key ist gültig, aber Sie haben [Formular A-1](forms/a-1.txt) vergessen.
+**Lösung:** Der Key ist gültig, aber Sie haben [Formular A-1](forms/formular_s-1_syntaxfehler-meldung.txt) vergessen.
 
 **Problem:** "ModuleNotFoundError"
-**Lösung:** Installieren Sie das Modul **und** reichen Sie [Formular D-200](forms/d-200.txt) ein.
+**Lösung:** Installieren Sie das Modul **und** reichen Sie [Formular D-200](forms/formular_s-1_syntaxfehler-meldung.txt) ein.
 
 **Problem:** "Ich bekomme keine Antwort"
 **Lösung:** Die Bearbeitungszeit beträgt 6-8 Wochen. Bitte haben Sie Geduld.
