@@ -27,8 +27,8 @@ class ProviderConfig(BaseModel):
 
 
 class ProviderManager:
-    def __init__(self, config_path: str = "providers.toml"):
-        self.config_path = Path(config_path)
+    def __init__(self, config_path: str | None = None):
+        self.config_path = Path(config_path) if config_path else Path(__file__).with_name("providers.toml")
         self.providers: dict[str, ProviderConfig] = {}
         self._load_providers()
 
