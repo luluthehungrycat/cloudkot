@@ -23,7 +23,7 @@ Der Eigentümer von Cloudkot (C) behält sich darüber hinaus das Recht vor, bei
 - ✅ **Code-Generierung** mit DIN-Norm-Konformität
 - ✅ **Bürokratie-Modus**: Jede Code-Änderung erfordert Formulare
 - ✅ **Deutsche Fehler-Meldungen** (z.B. *"Verstoß gegen §12 Abs. 3"*)
-- ✅ **Fake PDF-Formulare** für Variablen, Funktionen, Schleifen
+- ✅ **Fake Text-Formulare** für Variablen, Funktionen, Schleifen
 - ✅ **LSP-Integration** für IDEs (VS Code, Neovim)
 - ✅ **OpenAI-kompatibel**: Funktioniert mit Mistral, Groq, LocalAI, OpenRouter, etc.
 
@@ -126,7 +126,7 @@ def addiere(a: float, b: float) -> float:
 
 ---
 Hinweis: Dieser Code unterliegt der Mehrwertsteuer (19%).
-📄 Hinweis: Bitte reichen Sie [Formular F-42: Funktionsgenehmigung](forms/formular_f_42_funktionsgenehmigung.pdf) ein.
+📄 Hinweis: Bitte reichen Sie [Formular F-42: Funktionsgenehmigung](forms/formular_f-42_funktionsgenehmigung.txt) ein.
 ```
 
 ---
@@ -204,13 +204,13 @@ python main.py generate -p "..." --provider openai --model gpt-4o
 ## ❓ Häufige Probleme
 
 **Problem:** "Event loop is closed"
-**Lösung:** Füllen Sie [Formular E-404](forms/e_404.pdf) aus und warten Sie 6-8 Wochen.
+**Lösung:** Füllen Sie [Formular E-404](forms/formular_s-1_syntaxfehler-meldung.txt) aus und warten Sie 6-8 Wochen.
 
 **Problem:** "API Key invalid"
-**Lösung:** Der Key ist gültig, aber Sie haben [Formular A-1](forms/a_1.pdf) vergessen.
+**Lösung:** Der Key ist gültig, aber Sie haben [Formular A-1](forms/formular_s-1_syntaxfehler-meldung.txt) vergessen.
 
 **Problem:** "ModuleNotFoundError"
-**Lösung:** Installieren Sie das Modul **und** reichen Sie [Formular D-200](forms/d_200.pdf) ein.
+**Lösung:** Installieren Sie das Modul **und** reichen Sie [Formular D-200](forms/formular_s-1_syntaxfehler-meldung.txt) ein.
 
 **Problem:** "Ich bekomme keine Antwort"
 **Lösung:** Die Bearbeitungszeit beträgt 6-8 Wochen. Bitte haben Sie Geduld.

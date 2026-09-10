@@ -2,6 +2,9 @@
 Unit tests for SatireEngine
 """
 
+import re
+from pathlib import Path
+
 import pytest
 
 from satire import engine as satire_engine_module
@@ -82,6 +85,41 @@ class TestSatireEngine:
 
         # Should contain form hint for function
         assert "Formular F-42" in wrapped or "Funktionsgenehmigung" in wrapped
+
+    def test_form_hint_links_to_generated_text_form(self, satire_engine, monkeypatch):
+        """Form hints must link to the text files the generator actually creates."""
+        monkeypatch.setattr(satire_engine_module.random, "random", lambda: 1.0)
+
+        wrapped = satire_engine.wrap_response("def add(a, b): return a + b", "function")
+
+        assert "forms/formular_f-42_funktionsgenehmigung.txt" in wrapped
+
+    def test_form_generator_creates_linked_text_form(self, tmp_path):
+        """The linked function form must be generated as a text artifact."""
+        from satire.forms import FormGenerator
+
+        generator = FormGenerator(str(tmp_path))
+
+        filename = generator.generate_form(
+            "Formular F-42: Funktionsgenehmigung", "return 1"
+        )
+
+        assert filename == "formular_f-42_funktionsgenehmigung.txt"
+        assert (tmp_path / filename).is_file()
+
+    def test_readme_form_links_match_generated_artifacts(self, tmp_path):
+        """README form links must target forms the generator can create."""
+        from satire.forms import FormGenerator
+
+        generator = FormGenerator(str(tmp_path))
+        generated = {
+            generator.generate_form(form, "x")
+            for form in SatireEngine().forms.values()
+        }
+        readme = (Path(__file__).parents[1] / "README.md").read_text(encoding="utf-8")
+        linked = set(re.findall(r"forms/([A-Za-z0-9_-]+\.txt)", readme))
+
+        assert linked <= generated
 
     def test_form_hint_for_variable(self, satire_engine):
         """Test that form hints are added for variable context"""
