@@ -34,8 +34,6 @@ def load_config() -> dict[str, Any]:
     if not config_path.exists():
         config_path = Path(__file__).with_name("config.toml.example")
     if not config_path.exists():
-        config_path = Path(__file__).with_name("config.example.toml")
-    if not config_path.exists():
         raise FileNotFoundError(
             "Config file not found. Please create config.toml from the template."
         )
