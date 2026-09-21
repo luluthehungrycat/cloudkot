@@ -83,8 +83,9 @@ class MCPServer:
         # Extract configuration with defaults
         host = config.get("host", "localhost")
         port = config.get("port", 8080)
-        auth_required = config.get("auth_required", False)
-        auth_key = config.get("api_key") if auth_required else None
+        auth_key = config.get("api_key")
+        # A configured key must never leave authentication optional.
+        auth_required = bool(config.get("auth_required", False) or auth_key)
 
         return cls(
             host=host,
