@@ -5,7 +5,6 @@ Core coding logic and functionality
 
 import asyncio
 import json
-from typing import Any
 
 from api_client import APIClient, Message
 from satire.engine import SatireEngine
