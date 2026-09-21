@@ -213,7 +213,6 @@ ruff check --fix .
 - CI runs on main + PRs (test, lint, type-check)
 - The codebase is on GitHub at `luluthehungrycat/cloudkot`
 
-Refer to project-level skills in .agents/skills/ for access to reusable workflows specific to this project.
 ---
 
 ## \ud83d\udcd1 Development Guidelines
@@ -304,7 +303,7 @@ chore: Remove requirements.txt, use pyproject.toml only
 ### Pull Requests
 
 - **Titel**: Kurz und pr\u00e4zise (z.B. "feat: Add profile system")
-- **Beschreibung**:
+- **Beschreibung**: 
   - Was wird ge\u00e4ndert?
   - Warum wird es ge\u00e4ndert?
   - Screenshots (falls UI-\u00c4nderungen)
@@ -352,3 +351,6 @@ chore: Remove requirements.txt, use pyproject.toml only
 ---
 
 *"Diese Dokumentation unterliegt der Mehrwertsteuer (19%). Bitte bewahren Sie diese Ausgabe f\u00fcr Ihre Unterlagen auf."*
+
+
+Refer to project-level skills in .agents/skills/ for access to reusable workflows specific to this project.
