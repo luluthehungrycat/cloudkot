@@ -6,8 +6,9 @@ Handles different LLM providers with their specific configurations
 import os
 from pathlib import Path
 
-from compat import tomllib
 from pydantic import BaseModel
+
+from compat import tomllib
 
 
 class ProviderConfig(BaseModel):
