@@ -4,10 +4,16 @@ Provides MCP server functionality for integrating with MCP clients
 """
 
 import json
+import logging
+from pathlib import Path
 from typing import Any
 
 import websockets
 from pydantic import BaseModel
+
+from compat import tomllib
+
+logger = logging.getLogger(__name__)
 
 
 class MCPMessage(BaseModel):
@@ -20,9 +26,17 @@ class MCPMessage(BaseModel):
 
 
 class MCPServer:
-    def __init__(self, host: str = "localhost", port: int = 8080):
+    def __init__(
+        self,
+        host: str = "localhost",
+        port: int = 8080,
+        auth_key: str | None = None,
+        auth_required: bool = False,
+    ):
         self.host = host
         self.port = port
+        self.auth_key = auth_key
+        self.auth_required = auth_required
         self.server: websockets.WebSocketServer | None = None
         self.connections: list[websockets.WebSocketServerProtocol] = []
         self.tools: dict[str, Any] = {}
@@ -42,27 +56,68 @@ class MCPServer:
             "mime_type": mime_type,
         }
 
+    @classmethod
+    def from_config(cls, config_path: str | Path | None = None) -> "MCPServer":
+        """Create MCPServer from configuration file.
+
+        Args:
+            config_path: Path to mcp.toml config file. If None, tries to load from
+                       current directory or uses defaults.
+
+        Returns:
+            Configured MCPServer instance.
+        """
+        config: dict[str, Any] = {}
+
+        # Try to load config from file
+        if config_path:
+            path = Path(config_path)
+        else:
+            path = Path("mcp.toml")
+
+        if path.exists():
+            with open(path, "rb") as f:
+                config = tomllib.load(f)
+            config = dict(config.get("default", config))
+
+        # Extract configuration with defaults
+        host = config.get("host", "localhost")
+        port = config.get("port", 8080)
+        auth_key = config.get("api_key")
+        # A configured key must never leave authentication optional.
+        auth_required = bool(config.get("auth_required", False) or auth_key)
+
+        return cls(
+            host=host,
+            port=port,
+            auth_key=auth_key,
+            auth_required=auth_required,
+        )
+
     async def handle_message(self, message: str) -> str:
-        """Handle an incoming MCP message"""
+        """Handle an incoming MCP message."""
+        request_id: int | None = None
         try:
-            msg = MCPMessage(**json.loads(message))
+            payload = json.loads(message)
+            if isinstance(payload, dict):
+                request_id = payload.get("id")
+            msg = MCPMessage(**payload)
 
             if msg.method == "tools/list":
                 return self._handle_tools_list(msg)
-            elif msg.method == "tools/call":
+            if msg.method == "tools/call":
                 return await self._handle_tool_call(msg)
-            elif msg.method == "resources/list":
+            if msg.method == "resources/list":
                 return self._handle_resources_list(msg)
-            elif msg.method == "resources/read":
+            if msg.method == "resources/read":
                 return self._handle_resource_read(msg)
-            else:
-                return self._handle_unknown_method(msg)
+            return self._handle_unknown_method(msg)
 
         except Exception as e:
             return json.dumps(
                 {
                     "jsonrpc": "2.0",
-                    "id": msg.id if msg.id else 1,
+                    "id": request_id,
                     "error": {
                         "code": -32603,
                         "message": f"Internal error: {str(e)}",
@@ -216,30 +271,67 @@ class MCPServer:
             }
         )
 
+    def _check_auth(self, headers: dict[str, str]) -> bool:
+        """Check whether a connection has the configured bearer token."""
+        if not self.auth_required:
+            return True
+
+        if not self.auth_key:
+            logger.warning("Authentication required but no auth_key configured")
+            return False
+
+        normalized_headers = {key.lower(): value for key, value in headers.items()}
+        auth_header = normalized_headers.get("authorization", "")
+        if auth_header.startswith("Bearer "):
+            provided_key = auth_header[7:].strip()
+            if provided_key == self.auth_key:
+                return True
+
+        logger.warning("Authentication failed: Invalid or missing API key")
+        return False
+
     async def handle_connection(
         self, websocket: websockets.WebSocketServerProtocol, path: str
     ):
-        """Handle a new WebSocket connection"""
+        """Handle a new WebSocket connection with authentication check"""
+        # Extract headers from the websocket
+        headers = dict(websocket.request_headers)
+
+        # Check authentication
+        if not self._check_auth(headers):
+            logger.warning(
+                f"Unauthorized connection attempt from {websocket.remote_address}"
+            )
+            await websocket.close(code=1008, reason="Unauthorized")
+            return
+
         self.connections.append(websocket)
-        print(f"MCP client connected from {websocket.remote_address}")
+        logger.info(f"MCP client connected from {websocket.remote_address}")
 
         try:
             async for message in websocket:
                 response = await self.handle_message(message)
                 await websocket.send(response)
         except websockets.exceptions.ConnectionClosed:
-            print("MCP client disconnected")
+            logger.info("MCP client disconnected")
         finally:
             self.connections.remove(websocket)
 
-    async def start(self):
-        """Start the MCP server"""
+    async def start(self, config_path: str | Path | None = None):
+        """Start the MCP server.
+
+        Args:
+            config_path: Optional path to mcp.toml config file.
+                        If provided and auth is configured, it will be used.
+        """
         self.server = await websockets.serve(
             self.handle_connection,
             self.host,
             self.port,
         )
-        print(f"MCP server started on ws://{self.host}:{self.port}")
+
+        auth_status = "with authentication" if self.auth_required else "without authentication"
+        logger.info(f"MCP server started on ws://{self.host}:{self.port} ({auth_status})")
 
         # Register default tools
         self._register_default_tools()
@@ -282,8 +374,16 @@ class MCPServer:
 def main():
     """Entry point for: cloudkot-mcp"""
     import asyncio
-    asyncio.run(mcp_server.start())
+    import logging
+
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    )
+
+    server = MCPServer.from_config()
+    asyncio.run(server.start())
 
 
-# Singleton instance
+# Default singleton instance (backwards compatibility)
 mcp_server = MCPServer()

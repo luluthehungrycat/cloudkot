@@ -17,7 +17,7 @@ name = "OpenAI OAuth"
 description = "OpenAI with OAuth (ChatGPT Plus/Pro)"
 base_url = "https://api.openai.com/v1"
 api_key_env = "OPENAI_OAUTH_TOKEN"
-models = ["gpt-4o", "gpt-4o-mini", "gpt-3.5-turbo"]
+models = ["gpt-5.6-terra", "gpt-5.6-luna", "gpt-5.5-mini"]
 auth_type = "oauth"
 requires_oauth = true
 oauth_url = "https://auth.openai.com"
@@ -36,7 +36,7 @@ name = "Mistral AI"
 description = "Mistral AI models"
 base_url = "https://api.mistral.ai/v1"
 api_key_env = "MISTRAL_API_KEY"
-models = ["mistral-large", "mistral-small", "mistral-tiny"]
+models = ["mistral-large", "mistral-small", "mistral-medium", "mistral-large-latest", "mistral-medium-latest", "mistral-small-latest"]
 auth_type = "api_key"
 requires_oauth = false
 
@@ -45,7 +45,7 @@ name = "OpenRouter"
 description = "OpenRouter API gateway"
 base_url = "https://openrouter.ai/api/v1"
 api_key_env = "OPENROUTER_API_KEY"
-models = ["openai/gpt-4o", "anthropic/claude-3-5-sonnet", "mistralai/mistral-large"]
+models = ["openai/gpt-4o", "anthropic/claude-3-5-sonnet", "mistralai/mistral-large", "openai/gpt-oss-20b"]
 auth_type = "api_key"
 requires_oauth = false
 
@@ -54,7 +54,7 @@ name = "OpenCode Go"
 description = "OpenCode Go models"
 base_url = "https://api.opencode.co/v1"
 api_key_env = "OPENCODE_API_KEY"
-models = ["openai/gpt-4o", "anthropic/claude-3-5-sonnet"]
+models = ["deepseek-v4-flash", "deepseek-v4-pro"]
 auth_type = "api_key"
 requires_oauth = false
 
@@ -63,7 +63,7 @@ name = "OpenCode Zen"
 description = "OpenCode Zen models"
 base_url = "https://api.zen.opencode.co/v1"
 api_key_env = "OPENCODE_ZEN_API_KEY"
-models = ["openai/gpt-4o", "anthropic/claude-3-5-sonnet"]
+models = ["openai/gpt-4o", "anthropic/claude-5-sonnet", "big-pickle"]
 auth_type = "api_key"
 requires_oauth = false
 

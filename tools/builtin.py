@@ -7,36 +7,51 @@ import fnmatch
 import glob
 import os
 import re
+import shlex
 import subprocess
 from typing import Any
 
-# ---------------------------------------------------------------------------
-# Safety helpers
-# ---------------------------------------------------------------------------
-
-_DESTRUCTIVE_PREFIXES = (
-    "sudo ",
-    "rm -rf /",
-    "rm -rf /*",
-    "rm -rf ~",
-    "rm -rf $HOME",
-    ":(){ :|:& };:",
-    "mkfs.",
-    "dd if=",
-    "> /dev/sd",
-    "| sh",
-    "| bash",
-)
+_ALLOWED_COMMANDS = {
+    "cat",
+    "echo",
+    "grep",
+    "head",
+    "ls",
+    "pwd",
+    "rg",
+    "tail",
+    "wc",
+}
+_MAX_COMMAND_TIMEOUT = 120
 
 
-def _is_safe_command(command: str) -> bool:
-    """Return False if the command looks destructive."""
-    stripped = command.strip()
-    low = stripped.lower()
-    for prefix in _DESTRUCTIVE_PREFIXES:
-        if low.startswith(prefix):
-            return False
-    return True
+def _parse_safe_command(command: str, timeout: int) -> tuple[list[str] | None, str]:
+    """Parse and validate a command before it is executed."""
+    if not command.strip():
+        return None, "command must not be empty"
+    if not isinstance(timeout, int) or isinstance(timeout, bool) or not 0 < timeout <= _MAX_COMMAND_TIMEOUT:
+        return None, f"timeout must be an integer between 1 and {_MAX_COMMAND_TIMEOUT} seconds"
+    if any(operator in command for operator in (";", "&&", "||", "|", ">", "<", "`", "$(", "${")):
+        return None, "shell operators and command substitution are not allowed"
+
+    try:
+        arguments = shlex.split(command)
+    except ValueError as error:
+        return None, f"invalid command syntax: {error}"
+    if not arguments:
+        return None, "command must not be empty"
+    if "/" in arguments[0] or "\\" in arguments[0]:
+        return None, "path-qualified executables are not allowed"
+    if arguments[0] not in _ALLOWED_COMMANDS:
+        executable = arguments[0]
+        return None, f"executable is not approved: {executable}"
+    return arguments, ""
+
+
+def _is_safe_command(command: str) -> tuple[bool, str]:
+    """Check whether a command satisfies the constrained execution policy."""
+    arguments, reason = _parse_safe_command(command, 30)
+    return arguments is not None, reason
 
 
 # ---------------------------------------------------------------------------
@@ -152,16 +167,18 @@ async def run_command_handler(command: str, timeout: int = 30) -> str:
         command: Shell command to execute.
         timeout: Timeout in seconds (default 30).
     """
-    if not _is_safe_command(command):
+    arguments, reason = _parse_safe_command(command, timeout)
+    if arguments is None:
         return (
-            f"Error: Command rejected for safety reasons.\n"
-            f"Blocked command: {command}"
+            "Error: Command rejected for safety reasons.\n"
+            f"Blocked: {reason}\n"
+            f"Command: {command}"
         )
 
     try:
         result = subprocess.run(
-            command,
-            shell=True,
+            arguments,
+            shell=False,
             capture_output=True,
             text=True,
             timeout=timeout,
@@ -290,7 +307,7 @@ TOOL_DEFINITIONS = [
         "type": "function",
         "function": {
             "name": "run_command",
-            "description": "Run a shell command and return its output. Destructive commands are blocked for safety.",
+            "description": "Run an approved read-only command without shell interpretation. Shell operators and destructive commands are rejected.",
             "parameters": {
                 "type": "object",
                 "properties": {

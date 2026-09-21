@@ -4,15 +4,11 @@ Handles different LLM providers with their specific configurations
 """
 
 import os
-
-try:
-    import tomllib
-except ModuleNotFoundError:
-    import tomli as tomllib
-
 from pathlib import Path
 
 from pydantic import BaseModel
+
+from compat import tomllib
 
 
 class ProviderConfig(BaseModel):
@@ -35,6 +31,8 @@ class ProviderManager:
     def _load_providers(self):
         """Load provider configurations from TOML file"""
         if not self.config_path.exists():
+            # Local-only operation does not need provider metadata. Defer the
+            # failure until a caller explicitly requests a named provider.
             return
 
         with open(self.config_path, "rb") as f:

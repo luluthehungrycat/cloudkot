@@ -79,10 +79,16 @@ class APIClient:
     ):
         # Use provider manager if provider is specified
         if provider:
-            provider_config = provider_manager.get_provider(provider)
-            self.base_url = base_url or provider_config.base_url
-            self.api_key = api_key or os.getenv(provider_config.api_key_env, "")
-            self.model = model or provider_config.models[0] if provider_config.models else "gpt-3.5-turbo"
+            try:
+                provider_config = provider_manager.get_provider(provider)
+                self.base_url = base_url or provider_config.base_url
+                self.api_key = api_key or os.getenv(provider_config.api_key_env, "")
+                self.model = model or provider_config.models[0] if provider_config.models else "gpt-3.5-turbo"
+            except (FileNotFoundError, ValueError) as e:
+                raise ValueError(
+                    f"Could not load provider '{provider}': {e}. "
+                    "Please ensure providers.toml exists and contains the provider."
+                ) from e
         else:
             self.base_url = base_url or "http://localhost:8080"
             self.api_key = api_key or ""
@@ -137,7 +143,10 @@ class APIClient:
             context_msg_objects = [Message(**m) for m in context_messages]
             messages = context_msg_objects + messages
 
-        headers = {"Authorization": f"Bearer {self.api_key or ''}"}
+        # Only include Authorization header if api_key is non-empty
+        headers = {}
+        if self.api_key and self.api_key.strip():
+            headers["Authorization"] = f"Bearer {self.api_key}"
 
         # Some providers use different headers
         if self.provider == "anthropic":
@@ -192,7 +201,16 @@ class APIClient:
                             data = line[6:].strip()
                             if data == "[DONE]":
                                 break
-                            chunk = json.loads(data)
+                            # Validate JSON before parsing
+                            if not data:
+                                continue
+                            try:
+                                chunk = json.loads(data)
+                            except json.JSONDecodeError as e:
+                                # Skip malformed JSON chunks and continue
+                                if callbacks and callbacks.on_text:
+                                    callbacks.on_text(f"\n[Warning: Invalid JSON chunk: {e}]\n")
+                                continue
                             # Skip lines with empty choices (e.g. cost info)
                             if not chunk.get("choices"):
                                 continue
@@ -218,20 +236,23 @@ class APIClient:
                                     idx = tc["index"]
                                     if idx not in tool_calls_acc:
                                         tool_calls_acc[idx] = {
-                                            "id": tc.get("id", ""),
+                                            "id": tc.get("id") or "",
                                             "type": tc.get("type", "function"),
                                             "function": {
-                                                "name": tc.get("function", {}).get("name", ""),
-                                                "arguments": tc.get("function", {}).get("arguments", ""),
+                                                "name": tc.get("function", {}).get("name") or "",
+                                                "arguments": tc.get("function", {}).get("arguments") or "",
                                             }
                                         }
                                     else:
                                         # Accumulate function arguments across chunks
                                         if "function" in tc:
-                                            if tc["function"].get("name"):
-                                                tool_calls_acc[idx]["function"]["name"] = tc["function"]["name"]
-                                            if tc["function"].get("arguments"):
-                                                tool_calls_acc[idx]["function"]["arguments"] += tc["function"]["arguments"]
+                                            func_data = tc["function"]
+                                            if func_data.get("name"):
+                                                tool_calls_acc[idx]["function"]["name"] = func_data["name"]
+                                            # SAFELY accumulate arguments - only concatenate if not None
+                                            arguments = func_data.get("arguments")
+                                            if arguments is not None:
+                                                tool_calls_acc[idx]["function"]["arguments"] += arguments
                                             if tc.get("id"):
                                                 tool_calls_acc[idx]["id"] = tc["id"]
 

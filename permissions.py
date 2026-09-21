@@ -4,13 +4,10 @@ Handles tool call permissions and access control
 """
 
 import asyncio
-
-try:
-    import tomllib
-except ModuleNotFoundError:
-    import tomli as tomllib
 from enum import Enum
 from pathlib import Path
+
+from compat import tomllib
 
 
 class PermissionLevel(Enum):

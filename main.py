@@ -6,18 +6,13 @@ Der deutsche KI-Code-Assistent mit Bürokratie-Modus
 import asyncio
 import os
 import re
-
-try:
-    import tomllib
-except ModuleNotFoundError:
-    import tomli as tomllib
-
 from pathlib import Path
 from typing import Any
 
 import click
 
 from api_client import APIClient
+from compat import tomllib
 from context_manager import context_manager
 from harness import CodingHarness
 from permissions import permission_manager
@@ -205,25 +200,23 @@ def context_clear():
     click.echo("Context window cleared.")
 
 
-@cli.command()
-@click.option("--prompt", "-p", required=True, help="Your coding prompt")
-@click.option("--context", "-c", default=None, help="Context for satire (e.g., 'function')")
-@click.option("--no-bürokratie", is_flag=True, help="Disable Bürokratie Mode")
-@click.option("--provider", "-P", default=None, help="LLM provider to use")
-@click.option("--model", "-m", default=None, help="Model to use")
-@click.option("--personality", "-L", default=None, help="Personality to use")
-def generate(
-    prompt: str,
-    context: str | None,
-    no_bürokratie: bool,
+def _create_harness(
     provider: str | None,
     model: str | None,
     personality: str | None,
-):
-    """Generate code with optional Bürokratie Mode."""
+    no_bürokratie: bool = True,
+    skills: tuple[str, ...] | None = None,
+) -> tuple[CodingHarness, list[str]]:
+    """Create and configure a CodingHarness with the given options.
+
+    Returns:
+        Tuple of (configured CodingHarness, enabled skills list)
+    """
+    from skills.skill_manager import skill_manager
+
     config = load_config()
 
-    # Override with command line options
+    # Override with provided options
     if provider:
         config["api"]["provider"] = provider
     if model:
@@ -233,14 +226,44 @@ def generate(
 
     api = create_api_client(config)
 
-    # Set personality if specified
     if personality:
         api.set_personality(personality)
 
-    satire = SatireEngine(bürokratie_mode=not no_bürokratie)
+    satire = SatireEngine(bürokratie_mode=no_bürokratie)
     harness = CodingHarness(api, satire)
 
-    response = asyncio.run(harness.generate_code(prompt, context))
+    # Enable requested skills
+    skill_list = []
+    if skills:
+        for skill_name in skills:
+            skill_manager.enable_skill(skill_name)
+        skill_list = list(skills)
+
+    return harness, skill_list
+
+
+@cli.command()
+@click.option("--prompt", "-p", required=True, help="Your coding prompt")
+@click.option("--context", "-c", default=None, help="Context for satire (e.g., 'function')")
+@click.option("--no-bürokratie", is_flag=True, help="Disable Bürokratie Mode")
+@click.option("--provider", "-P", default=None, help="LLM provider to use")
+@click.option("--model", "-m", default=None, help="Model to use")
+@click.option("--personality", "-L", default=None, help="Personality to use")
+@click.option("--skills", "-s", multiple=True, help="Skills to enable (code_generation, code_explanation, code_refactoring, code_review, documentation)")
+def generate(
+    prompt: str,
+    context: str | None,
+    no_bürokratie: bool,
+    provider: str | None,
+    model: str | None,
+    personality: str | None,
+    skills: tuple[str, ...],
+):
+    """Generate code with optional Bürokratie Mode and skills."""
+    harness, skill_list = _create_harness(
+        provider, model, personality, not no_bürokratie, skills
+    )
+    response = asyncio.run(harness.generate_code(prompt, context, skills=skill_list))
     print(response)
 
 
@@ -249,26 +272,21 @@ def generate(
 @click.option("--provider", "-P", default=None, help="LLM provider to use")
 @click.option("--model", "-m", default=None, help="Model to use")
 @click.option("--personality", "-L", default=None, help="Personality to use")
-def explain(code: str, provider: str | None, model: str | None, personality: str | None):
-    """Explain code with Bürokratie Mode."""
-    config = load_config()
-
-    if provider:
-        config["api"]["provider"] = provider
-    if model:
-        config["api"]["model"] = model
-    if personality:
-        config["personality"]["active"] = personality
-
-    api = create_api_client(config)
-
-    if personality:
-        api.set_personality(personality)
-
-    satire = SatireEngine()
-    harness = CodingHarness(api, satire)
-
-    response = asyncio.run(harness.explain_code(code))
+@click.option("--skills", "-s", multiple=True, help="Skills to enable")
+@click.option("--no-bürokratie", is_flag=True, help="Disable Bürokratie Mode")
+def explain(
+    code: str,
+    provider: str | None,
+    model: str | None,
+    personality: str | None,
+    skills: tuple[str, ...],
+    no_bürokratie: bool,
+):
+    """Explain code with Bürokratie Mode and optional skills."""
+    harness, skill_list = _create_harness(
+        provider, model, personality, not no_bürokratie, skills
+    )
+    response = asyncio.run(harness.explain_code(code, skills=skill_list))
     print(response)
 
 
@@ -277,26 +295,21 @@ def explain(code: str, provider: str | None, model: str | None, personality: str
 @click.option("--provider", "-P", default=None, help="LLM provider to use")
 @click.option("--model", "-m", default=None, help="Model to use")
 @click.option("--personality", "-L", default=None, help="Personality to use")
-def refactor(code: str, provider: str | None, model: str | None, personality: str | None):
-    """Refactor code with Bürokratie Mode."""
-    config = load_config()
-
-    if provider:
-        config["api"]["provider"] = provider
-    if model:
-        config["api"]["model"] = model
-    if personality:
-        config["personality"]["active"] = personality
-
-    api = create_api_client(config)
-
-    if personality:
-        api.set_personality(personality)
-
-    satire = SatireEngine()
-    harness = CodingHarness(api, satire)
-
-    response = asyncio.run(harness.refactor_code(code))
+@click.option("--skills", "-s", multiple=True, help="Skills to enable")
+@click.option("--no-bürokratie", is_flag=True, help="Disable Bürokratie Mode")
+def refactor(
+    code: str,
+    provider: str | None,
+    model: str | None,
+    personality: str | None,
+    skills: tuple[str, ...],
+    no_bürokratie: bool,
+):
+    """Refactor code with Bürokratie Mode and optional skills."""
+    harness, skill_list = _create_harness(
+        provider, model, personality, not no_bürokratie, skills
+    )
+    response = asyncio.run(harness.refactor_code(code, skills=skill_list))
     print(response)
 
 
@@ -315,14 +328,74 @@ def tui():
 
 
 @cli.command()
-def mcp():
-    """Start the MCP server."""
+@click.option(
+    "--auth-key",
+    "-k",
+    default=None,
+    help="API key for MCP server authentication (overrides config)",
+)
+@click.option(
+    "--auth-required",
+    "-a",
+    is_flag=True,
+    default=None,
+    help="Require authentication for MCP server (overrides config)",
+)
+@click.option(
+    "--config",
+    "-c",
+    default=None,
+    help="Path to mcp.toml configuration file",
+)
+@click.option("--host", "-H", default=None, help="Host to bind to (default: localhost)")
+@click.option("--port", "-p", default=None, type=int, help="Port to bind to (default: 8080)")
+def mcp(
+    auth_key: str | None,
+    auth_required: bool | None,
+    config: str | None,
+    host: str | None,
+    port: int | None,
+):
+    """Start the MCP server with optional authentication."""
     import asyncio
+    import logging
 
-    from mcp_server import mcp_server
+    from mcp_server import MCPServer
 
-    print("Starting Cloudkot MCP server...")
-    asyncio.run(mcp_server.start())
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    )
+
+    # Load from config file if provided
+    if config:
+        server = MCPServer.from_config(config)
+    else:
+        server = MCPServer.from_config()
+
+    # Override with command line options
+    if host:
+        server.host = host
+    if port:
+        server.port = port
+    if auth_key is not None:
+        server.auth_key = auth_key
+        # Supplying a key must never leave authentication optional.
+        server.auth_required = True
+    if auth_required:
+        server.auth_required = True
+
+    # If auth is required but no key is set, and no explicit auth_key provided,
+    # we need to handle this gracefully
+    if server.auth_required and server.auth_key is None:
+        if auth_key is None:
+            click.echo(
+                "Warning: Authentication is required but no API key is configured. "
+                "Use --auth-key to provide one, or set api_key in mcp.toml."
+            )
+
+    click.echo("Starting Cloudkot MCP server...")
+    asyncio.run(server.start(config))
 
 
 @cli.command()
