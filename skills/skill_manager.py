@@ -105,7 +105,6 @@ class CodeGenerationSkill(BaseSkill):
 
     async def execute(self, **kwargs: Any) -> SkillResult:
         phase = kwargs.get("phase")
-        messages = kwargs.get("messages", [])
         content = kwargs.get("content", "")
         
         if phase == "preprocess":
@@ -141,7 +140,6 @@ class CodeExplanationSkill(BaseSkill):
     async def execute(self, **kwargs: Any) -> SkillResult:
         phase = kwargs.get("phase")
         content = kwargs.get("content", "")
-        messages = kwargs.get("messages", [])
         
         if phase == "preprocess":
             # Add context about explanation requirements
