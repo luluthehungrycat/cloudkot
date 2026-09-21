@@ -30,10 +30,9 @@ class ProviderManager:
     def _load_providers(self):
         """Load provider configurations from TOML file"""
         if not self.config_path.exists():
-            raise FileNotFoundError(
-                f"Provider configuration file not found: {self.config_path}. "
-                "Please ensure providers.toml exists in the project root."
-            )
+            # Local-only operation does not need provider metadata. Defer the
+            # failure until a caller explicitly requests a named provider.
+            return
 
         with open(self.config_path, "rb") as f:
             config = tomllib.load(f)
