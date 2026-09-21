@@ -1,6 +1,8 @@
 import json
+from pathlib import Path
 
 import pytest
+from click.testing import CliRunner
 
 from context_manager import ContextManager
 from mcp_server import MCPServer
@@ -15,6 +17,38 @@ class TestMCPServerSafety:
         assert server._check_auth({"authorization": "Bearer secret"}) is True
         assert server._check_auth({"Authorization": "Bearer wrong"}) is False
         assert server._check_auth({}) is False
+
+    def test_configured_mcp_key_enables_authentication(self, tmp_path):
+        config_path = tmp_path / "mcp.toml"
+        config_path.write_text("[default]\napi_key = \"secret\"\n", encoding="utf-8")
+
+        server = MCPServer.from_config(config_path)
+
+        assert server.auth_required is True
+        assert server._check_auth({"Authorization": "Bearer secret"}) is True
+        assert server._check_auth({}) is False
+
+    def test_cli_mcp_key_enables_authentication(self, monkeypatch):
+        import main
+
+        captured = {}
+
+        async def fake_start(server, config_path=None):
+            captured["server"] = server
+
+        monkeypatch.setattr(MCPServer, "start", fake_start)
+        result = CliRunner().invoke(main.cli, ["mcp", "--auth-key", "secret"])
+
+        assert result.exit_code == 0, result.output
+        assert captured["server"].auth_key == "secret"
+        assert captured["server"].auth_required is True
+
+    def test_requirements_pin_legacy_websockets_api(self):
+        requirements = (Path(__file__).resolve().parents[1] / "requirements.txt").read_text(
+            encoding="utf-8"
+        )
+
+        assert "websockets>=12.0,<13.0" in requirements
 
     @pytest.mark.asyncio
     async def test_malformed_message_returns_json_rpc_error(self):
