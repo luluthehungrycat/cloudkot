@@ -6,7 +6,6 @@ Der deutsche KI-Code-Assistent mit Bürokratie-Modus
 import asyncio
 import os
 import re
-import shutil
 from pathlib import Path
 from typing import Any
 
@@ -30,20 +29,18 @@ def cli():
 
 
 def load_config() -> dict[str, Any]:
-    """Load configuration from config.toml, create from example if missing"""
+    """Load local configuration, falling back to a packaged safe example."""
     config_path = Path("config.toml")
     if not config_path.exists():
-        example_path = Path("config.example.toml")
-        if example_path.exists():
-            shutil.copy2(example_path, config_path)
-            print(
-                "Created config.toml from example. "
-                "Please edit it with your API settings."
-            )
-        else:
-            raise FileNotFoundError(
-                "Config file not found. Please create config.toml from config.example.toml."
-            )
+        templates = (
+            Path(__file__).with_name("config.toml.example"),
+            Path(__file__).with_name("config.example.toml"),
+        )
+        config_path = next((path for path in templates if path.exists()), config_path)
+    if not config_path.exists():
+        raise FileNotFoundError(
+            "Config file not found. Please create config.toml from the template."
+        )
     with open(config_path, "rb") as f:
         raw = tomllib.load(f)
         return dict(raw)  # type: ignore[return-value]
@@ -77,6 +74,11 @@ def create_api_client(config: dict[str, Any]) -> APIClient:
             )
         except Exception as e:
             print(f"Warning: Could not load provider {provider}: {e}")
+            return APIClient(
+                base_url="http://localhost:8080",
+                api_key="",
+                model="mistral-tiny",
+            )
 
     # Fallback to local configuration
     return APIClient(
