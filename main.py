@@ -384,8 +384,10 @@ def mcp(
         server.port = port
     if auth_key is not None:
         server.auth_key = auth_key
-    if auth_required is not None:
-        server.auth_required = auth_required
+        # Supplying a key must never leave authentication optional.
+        server.auth_required = True
+    if auth_required:
+        server.auth_required = True
     
     # If auth is required but no key is set, and no explicit auth_key provided,
     # we need to handle this gracefully
