@@ -78,3 +78,11 @@ class TestProviderManager:
 
         api_key = provider_manager.get_api_key("openai")
         assert api_key is None
+
+    def test_missing_provider_config_is_deferred(self, tmp_path):
+        manager = ProviderManager(tmp_path / "missing-providers.toml")
+
+        assert manager.list_providers() == []
+        with pytest.raises(ValueError, match="Unknown provider"):
+            manager.get_provider("openai")
+
