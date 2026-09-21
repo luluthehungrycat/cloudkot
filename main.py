@@ -29,14 +29,12 @@ def cli():
 
 
 def load_config() -> dict[str, Any]:
-    """Load local configuration, falling back to a packaged safe example."""
+    """Load local configuration, falling back to the packaged safe example."""
     config_path = Path("config.toml")
     if not config_path.exists():
-        templates = (
-            Path(__file__).with_name("config.toml.example"),
-            Path(__file__).with_name("config.example.toml"),
-        )
-        config_path = next((path for path in templates if path.exists()), config_path)
+        config_path = Path(__file__).with_name("config.toml.example")
+        if not config_path.exists():
+            config_path = Path(__file__).with_name("config.example.toml")
     if not config_path.exists():
         raise FileNotFoundError(
             "Config file not found. Please create config.toml from the template."
