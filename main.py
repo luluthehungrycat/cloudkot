@@ -7,15 +7,13 @@ import asyncio
 import os
 import re
 import shutil
-
 from pathlib import Path
 from typing import Any
 
 import click
 
-from compat import tomllib
-
 from api_client import APIClient
+from compat import tomllib
 from context_manager import context_manager
 from harness import CodingHarness
 from permissions import permission_manager
@@ -212,12 +210,12 @@ def _create_harness(
     skills: tuple[str, ...] | None = None,
 ) -> tuple[CodingHarness, list[str]]:
     """Create and configure a CodingHarness with the given options.
-    
+
     Returns:
         Tuple of (configured CodingHarness, enabled skills list)
     """
     from skills.skill_manager import skill_manager
-    
+
     config = load_config()
 
     # Override with provided options
@@ -242,7 +240,7 @@ def _create_harness(
         for skill_name in skills:
             skill_manager.enable_skill(skill_name)
         skill_list = list(skills)
-    
+
     return harness, skill_list
 
 
@@ -376,7 +374,7 @@ def mcp(
         server = MCPServer.from_config(config)
     else:
         server = MCPServer.from_config()
-    
+
     # Override with command line options
     if host:
         server.host = host
@@ -388,7 +386,7 @@ def mcp(
         server.auth_required = True
     if auth_required:
         server.auth_required = True
-    
+
     # If auth is required but no key is set, and no explicit auth_key provided,
     # we need to handle this gracefully
     if server.auth_required and server.auth_key is None:
