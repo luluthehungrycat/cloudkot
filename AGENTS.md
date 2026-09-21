@@ -351,6 +351,3 @@ chore: Remove requirements.txt, use pyproject.toml only
 ---
 
 *"Diese Dokumentation unterliegt der Mehrwertsteuer (19%). Bitte bewahren Sie diese Ausgabe f\u00fcr Ihre Unterlagen auf."*
-
-
-Refer to project-level skills in .agents/skills/ for access to reusable workflows specific to this project.
